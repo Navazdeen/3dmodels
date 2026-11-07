@@ -177,7 +177,8 @@ module cradle() {
     translate([-iw/2, od - 1.2, wall + ih - 0.8]) cube([iw, 1.2, 0.8]);
 }
 
-// CAP — split face on bed, cup facing up.
+// CAP — modelled split-face-down; printed flipped (cap_print) so the cup
+// is an open bowl facing up. Printed the other way the dome ceiling sags.
 module cap() {
     difference() {
         translate([-(sock_s/2+sock_ear), -sock_s/2, 0])
@@ -196,11 +197,12 @@ if (PART == "base")   base();
 if (PART == "arm")    arm();
 if (PART == "stud")   stud();
 if (PART == "cradle") cradle();
-if (PART == "cap")    cap();
+module cap_print() translate([0,0,sock_hh - sock_gap]) rotate([180,0,0]) cap();
+if (PART == "cap")    cap_print();
 if (PART == "print") {
     translate([-30, 45, 0]) base();
     translate([15, 30, 0])  arm();
     translate([20, -30, 0]) stud();
     translate([-45, -40, 0]) cradle();
-    translate([50, 10, 0])  cap();
+    translate([50, 10, 0])  cap_print();
 }
