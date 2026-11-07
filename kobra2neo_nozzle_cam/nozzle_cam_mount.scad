@@ -48,12 +48,12 @@ ros_r     = 10;       // rosette radius
 ros_n     = 24;       // teeth -> 15 deg steps
 
 /* ---------- Ball joint ---------- */
-ball_d    = 14;
+ball_d    = 12;
 neck_d    = 6;
 neck_len  = 5;
-flange_d  = 16;
+flange_d  = 19;
 flange_h  = 4;
-pin_d     = 2.5;  pin_off = 5;
+pin_d     = 2.5;  pin_off = 6.5;   // keeps >=1.5 mm wall to nut trap and rim
 sock_wall = 3;
 sock_gap  = 0.5;      // per half; leaves 1 mm for the screws to squeeze
 cone_half = 55;       // socket mouth half-angle (tilt range = this - neck angle)
@@ -145,9 +145,12 @@ module stud() {
 
 // Socket block geometry (shared by cradle and cap)
 sock_s   = ball_d + 2*sock_wall;   // block width/depth
-sock_ear = 7;                      // ear beyond block for each screw
+sock_ear = 9;                      // ear beyond block; >=1.5 mm wall around screw counterbore
 sock_bx  = sock_s/2 + sock_ear/2;  // screw x offset
-sock_hh  = ball_d/2 + sock_wall;   // half-height of block
+sock_hh  = ball_d/2 + sock_wall;   // cap height (+gap)
+// lower half is taller: the 55 deg mouth cone must exit the back face
+// above the cradle top wall, or it cuts through into the camera pocket
+sock_low = ceil(sock_s/2 * tan(cone_half)) + 1;
 module socket_mouth() {
     // cone opening toward +Y (back of camera), where the stud enters
     rotate([-90,0,0]) cylinder(r1=0, r2=40*tan(cone_half), h=40);
@@ -157,20 +160,31 @@ module socket_mouth() {
 module cradle() {
     iw = cam_w + 2*fit;  ih = cam_h + 2*fit;  id = cam_d + fit;
     ow = iw + 2*wall;    oh = ih + 2*wall;    od = id + wall;
-    bc = [0, od/2, oh + sock_hh];            // ball centre
+    ys = od - sock_s;                        // socket block flush with back face
+    ov = -ys;                                // overhang past the front face
+    bc = [0, od - sock_s/2, oh + sock_low];  // ball centre
     difference() {
         union() {
             translate([-ow/2, 0, 0]) cube([ow, od, oh]);
             // lower socket half + ears
-            translate([-(sock_s/2+sock_ear), od/2 - sock_s/2, oh - 0.01])
-                cube([sock_s + 2*sock_ear, sock_s, sock_hh - sock_gap + 0.01]);
+            translate([-(sock_s/2+sock_ear), ys, oh - 0.01])
+                cube([sock_s + 2*sock_ear, sock_s, sock_low - sock_gap + 0.01]);
+            // 45 deg gusset under the front overhang (prints without support)
+            if (ov > 0) hull() {
+                translate([-(sock_s/2+sock_ear), ys, oh - 0.01]) cube([sock_s + 2*sock_ear, ov, 0.01]);
+                translate([-(sock_s/2+sock_ear), -0.01, oh - ov]) cube([sock_s + 2*sock_ear, 0.02, ov]);
+            }
         }
         translate([-iw/2, wall, wall]) cube([iw, id + 1, ih]);                     // pocket
-        translate([lens_off_x, -0.5, oh/2 + lens_off_z])
-            rotate([-90,0,0]) cylinder(d=lens_d + 1.0, h=wall + 1);               // lens window
+        // lens window as a teardrop: the pointed top keeps the overhang at 45 deg
+        translate([lens_off_x, -0.5, oh/2 + lens_off_z]) rotate([-90,0,0])
+            linear_extrude(wall + 1) hull() {
+                circle(d=lens_d + 1.0);
+                translate([0, -(lens_d + 1.0)/2*sqrt(2)]) square(0.01, center=true);
+            }
         translate(bc) sphere(d=ball_d + 0.2);
         translate(bc) socket_mouth();
-        for (s=[-1,1]) translate([s*sock_bx, od/2, oh + 1]) cylinder(d=m3_pilot, h=sock_hh + 1);
+        for (s=[-1,1]) translate([s*sock_bx, od - sock_s/2, oh + 1]) cylinder(d=m3_pilot, h=sock_low + 1);
     }
     // snap lips at the back opening, top and bottom
     translate([-iw/2, od - 1.2, wall])            cube([iw, 1.2, 0.8]);
@@ -187,7 +201,7 @@ module cap() {
         translate([0,0,-sock_gap]) socket_mouth();
         for (s=[-1,1]) translate([s*sock_bx, 0, -1]) {
             cylinder(d=m3_clear, h=sock_hh + 2);
-            translate([0,0,sock_hh - sock_gap - 2.5 + 1]) cylinder(d=6, h=5); // head counterbore
+            translate([0,0,sock_hh - sock_gap - 3 + 1]) cylinder(d=6, h=5);   // 3 mm head counterbore
         }
     }
 }
@@ -206,3 +220,31 @@ if (PART == "print") {
     translate([-45, -40, 0]) cradle();
     translate([50, 10, 0])  cap_print();
 }
+
+/* ================= assembly pose (for the web viewer) =================
+   World frame: head's left side face is the plane X=0, head body at +X,
+   Z up, Y along the head (front/back). PART = "asm_<part>" exports that
+   part in its assembled position so the viewer can explode it. */
+arm_angle = -82.5;    // arm swing about the rosette (display only); n*15+7.5 so the teeth mesh
+_lobe_y = -(base_l/2 + ros_r - 2);
+_iw = cam_w + 2*fit; _ih = cam_h + 2*fit; _id = cam_d + fit;
+_oh = _ih + 2*wall;  _od = _id + wall;
+_bc = [0, _od - sock_s/2, _oh + sock_low];
+
+module asm_base_tf()  multmatrix([[0,0,-1,0],[1,0,0,0],[0,1,0,0]]) children();
+module asm_arm_tf()
+    translate([0,0,_lobe_y]) rotate([arm_angle,0,0]) translate([0,0,-_lobe_y])
+    multmatrix([[0,0,1,-(arm_t+base_t+ros_h)],[1,0,0,0],[0,1,0,_lobe_y]]) children();
+module asm_stud_tf()   asm_arm_tf() translate([0,-arm_len,arm_t]) children();
+module asm_cradle_tf() asm_stud_tf()
+    multmatrix([[1,0,0,0],[0,0,1,-_bc[2]],[0,-1,0,ball_c + _bc[1]]]) children();
+module asm_cap_tf()    asm_cradle_tf()
+    multmatrix([[1,0,0,_bc[0]],[0,-1,0,_bc[1]],[0,0,-1,_bc[2] + sock_gap + sock_hh - sock_gap]]) children();
+
+if (PART == "asm_base")   asm_base_tf()   base();
+if (PART == "asm_arm")    asm_arm_tf()    arm();
+if (PART == "asm_stud")   asm_stud_tf()   stud();
+if (PART == "asm_cradle") asm_cradle_tf() cradle();
+if (PART == "asm_cap")    asm_cap_tf()    cap_print();
+if (PART == "asm") { asm_base_tf() base(); asm_arm_tf() arm(); asm_stud_tf() stud();
+                     asm_cradle_tf() cradle(); asm_cap_tf() cap_print(); }
