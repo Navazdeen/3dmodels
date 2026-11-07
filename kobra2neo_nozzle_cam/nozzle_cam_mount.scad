@@ -32,6 +32,7 @@ cam_d      = 10.0;   // body depth WITHOUT lens (15 incl. lens, est.) MEASURE
 lens_d     = 22.0;   // silver focus-ring outer dia (est. from photo) MEASURE
 lens_off_x = 4.0;    // lens centre right of body centre (est. from photo) MEASURE
 lens_off_z = 0.0;    // lens centre above body centre MEASURE
+lens_shape = "circle"; // "circle" | "flat" | "teardrop" (see lens_teardrop)
 fit        = 0.4;    // clearance per side
 lip_zone   = 2.4;    // pocket depth behind the camera for the snap lips + lead-in
 lip_d      = 0.6;    // how far each snap lip reaches over the camera's back edge
@@ -274,9 +275,21 @@ module cradle() {
         mirror([sx > 0 ? 1 : 0, 0, 0]) linear_extrude(tongue_h - 2)
             polygon([[-0.1, y0], [lip_d, y0], [lip_d, y0 + 0.6], [-0.1, y0 + 1.6]]);
 }
-module lens_teardrop(d) hull() {
-    circle(d=d, $fn=64);
-    translate([0, -d/2*sqrt(2)]) square(0.01, center=true);
+// Lens window outline. 2D -Y is "up" in the cradle (rotate([-90,0,0]) maps it).
+//  "circle"   : nominal round hole
+//  "flat"     : teardrop cut flat at the circle's top, so the hole is no
+//               taller than nominal; the flat is a short bridge
+//  "teardrop" : full point, 45 deg all the way up (adds 0.41 x radius height)
+module lens_teardrop(d) {
+    if (lens_shape == "circle") circle(d=d, $fn=64);
+    else intersection() {
+        hull() {
+            circle(d=d, $fn=64);
+            translate([0, -d/2*sqrt(2)]) square(0.01, center=true);
+        }
+        if (lens_shape == "flat") translate([-d, -d/2]) square([2*d, 2*d]);
+        else square(4*d, center=true);
+    }
 }
 
 // CAP — modelled directly in print orientation: screw-head face on the bed,
