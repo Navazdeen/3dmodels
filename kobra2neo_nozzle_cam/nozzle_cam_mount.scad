@@ -34,6 +34,10 @@ lens_off_x = 4.0;    // lens centre right of body centre (est. from photo) MEASU
 lens_off_z = 0.0;    // lens centre above body centre MEASURE
 fit        = 0.4;    // clearance per side
 lip_zone   = 2.4;    // pocket depth behind the camera for the snap lips + lead-in
+lip_d      = 0.6;    // how far each snap lip reaches over the camera's back edge
+tongue_l   = 11;     // free length of the side snap tongues (flex ~1.8 % strain in PETG)
+tongue_h   = 12;     // tongue height
+slit_w     = 1.0;    // slit that frees the tongue
 
 /* ---------- Head attachment ---------- */
 hole_spacing = 20.0;  // centre-to-centre of the two head screws    MEASURE
@@ -103,19 +107,21 @@ hole_ch  = 0.5;   // chamfer at hole entries
 $fn_tool = 24;
 
 // convex tool for minkowski: chamfered bottom (c), rounded top (r)
-module edge_tool(r=edge_r, c=bed_ch) hull() {
+module edge_tool(r=edge_r, c=bed_ch, top=true) hull() {
     cylinder(r1=r-c, r2=r, h=max(c,0.001), $fn=$fn_tool);
-    translate([0,0,max(c,0.001)]) intersection() {
-        sphere(r, $fn=$fn_tool);
-        cylinder(r=r, h=r, $fn=$fn_tool);
-    }
+    translate([0,0,max(c,0.001)])
+        if (top) intersection() {
+            sphere(r, $fn=$fn_tool);
+            cylinder(r=r, h=r, $fn=$fn_tool);
+        }
+        else cylinder(r=r, h=r, $fn=$fn_tool);   // square top edge
 }
 // extrude a 2D outline to height H with every outer edge finished
-module rslab(H, r=edge_r, c=bed_ch, fr=inner_r) {
+module rslab(H, r=edge_r, c=bed_ch, fr=inner_r, top=true) {
     minkowski() {
         linear_extrude(H - max(c,0.001) - r)
             offset(delta=-r) offset(r=fr) offset(delta=-fr) children();
-        edge_tool(r, c);
+        edge_tool(r, c, top);
     }
 }
 // chamfer cone for a hole entry at z=0 going down (place at the face)
@@ -225,8 +231,11 @@ module cradle() {
     difference() {
         union() {
             translate([0, od/2, 0]) rslab(oh) square([ow, od], center=true);
-            // lower socket half + ears: sits on the cradle, so no bottom chamfer
-            translate([0, ys + sock_s/2, oh - edge_r - 0.1]) rslab(top - oh + edge_r + 0.1, c=0) square([sock_W, sock_s], center=true);
+            // lower socket half + ears. Split face edges stay SHARP so the two
+            // halves meet flush with no groove; vertical corners are rounded
+            // with the same radius on both halves so they line up.
+            translate([0, ys + sock_s/2, oh - edge_r - 0.1])
+                rslab(top - oh + edge_r + 0.1, c=0, top=false) square([sock_W, sock_s], center=true);
             // rounded 45 deg gusset under the front overhang (prints without support)
             if (ov > 0) minkowski() {
                 rotate([90,0,90]) linear_extrude(sock_W - 2*edge_r, center=true)
@@ -245,19 +254,25 @@ module cradle() {
             translate([0,0,-0.01]) linear_extrude(0.81, scale=(lens_d+1.0)/(lens_d+2.6))
                 lens_teardrop(lens_d + 2.6);
         }
+        // slits that free a snap tongue at the back of each side wall
+        for (sx=[-1,1]) for (sz=[-1,1])
+            translate([sx > 0 ? iw/2 - 0.01 : -ow/2 - 1, od - tongue_l, wall + ih/2 + sz*(tongue_h/2 + slit_w/2) - slit_w/2])
+                cube([wall + 1.01, tongue_l + 1, slit_w]);
         translate(bc) sphere(d=ball_d + 0.2);
         translate(bc) socket_mouth();
-        translate([0,0,top]) translate([0, bc[1], 0]) cup_rim(sock_gap);
         for (s=[-1,1]) translate([s*sock_bx, bc[1], 0]) {
             translate([0,0,oh + 1]) cylinder(d=m3_pilot, h=sock_low + 1);
             translate([0,0,top]) hole_chamfer(m3_pilot);
         }
     }
-    // snap lips at the back opening, top and bottom: ramped so the camera
-    // slides in, square face inside so it stays in
-    for (z=[wall, wall + ih]) translate([0, od - 1.0, z]) mirror([0,0, z > wall ? 1 : 0])
-        rotate([90,0,90]) linear_extrude(iw - 2, center=true)
-            polygon([[-1.4, -0.1], [0, -0.1], [-0.6, 0.8], [-1.4, 0.8]]);  // flat-topped ramp, no knife edge
+    // Snap lips on the tips of the side tongues. They are vertical prisms, so
+    // every face prints as a wall (no overhang). The camera pushes in from the
+    // back, the ramps spread the tongues, and the square catch faces close
+    // behind the camera's back edge on the left and right.
+    y0 = wall + cam_d + fit;                 // camera back face when seated
+    for (sx=[-1,1]) translate([sx*iw/2, 0, wall + ih/2 - (tongue_h - 2)/2])
+        mirror([sx > 0 ? 1 : 0, 0, 0]) linear_extrude(tongue_h - 2)
+            polygon([[-0.1, y0], [lip_d, y0], [lip_d, y0 + 0.6], [-0.1, y0 + 1.6]]);
 }
 module lens_teardrop(d) hull() {
     circle(d=d, $fn=64);
@@ -270,12 +285,11 @@ module lens_teardrop(d) hull() {
 cap_H = sock_hh - sock_gap;
 module cap_print() {
     difference() {
-        rslab(cap_H) square([sock_W, sock_s], center=true);
+        rslab(cap_H, top=false) square([sock_W, sock_s], center=true);   // split face sharp
         translate([0,0,cap_H + sock_gap]) {
             sphere(d=ball_d + 0.2);
             rotate([0,0,180]) socket_mouth();          // mouth faces -Y in print frame
         }
-        translate([0,0,cap_H]) cup_rim(sock_gap);
         for (s=[-1,1]) translate([s*sock_bx, 0, 0]) {
             translate([0,0,-1]) cylinder(d=m3_clear, h=cap_H + 2);
             translate([0,0,-1]) cylinder(d=6, h=1 + 3);              // 3 mm head counterbore (bed side)
@@ -325,3 +339,10 @@ if (PART == "asm_cradle") asm_cradle_tf() cradle();
 if (PART == "asm_cap")    asm_cap_tf()    cap_print();
 if (PART == "asm") { asm_base_tf() base(); asm_arm_tf() arm(); asm_stud_tf() stud();
                      asm_cradle_tf() cradle(); asm_cap_tf() cap_print(); }
+
+// reference camera (not printed): body seated in the cradle + lens ring
+module camera_dummy() {
+    translate([-cam_w/2, wall, wall + fit]) cube([cam_w, cam_d, cam_h]);
+    translate([lens_off_x, wall + 0.01, _oh/2 + lens_off_z]) rotate([90,0,0]) cylinder(d=lens_d, h=wall + 5, $fn=48);
+}
+if (PART == "asm_camera") asm_cradle_tf() camera_dummy();
