@@ -75,7 +75,8 @@ nut_slot_t  = nyloc_t + 0.2;
 nut_slot_w  = 5.6;               // snug on the 5.5 mm flats: the nut pushes in and stays
 slot_skin   = 1.6;               // floor and roof around the slot (4 layers at 0.4)
 flange_h    = nut_slot_t + 2*slot_skin;
-pin_d     = 2.5;  pin_off = 6.5;   // keeps >=1.5 mm wall to nut trap and rim
+pin_d     = 3.0;  pin_off = 6.5;   // locating pins on the arm: hole edge stays 1.3 mm from the rim
+pin_fillet = 0.6;                  // root fillet on each pin (the pins take side load)
 sock_wall = 3;
 sock_gap  = 0.5;      // per half; leaves 1 mm for the screws to squeeze
 cone_half = 58;       // wider to make room for the neck-to-ball fillet       // socket mouth half-angle (tilt range = this - neck angle)
@@ -221,6 +222,11 @@ module arm() {
             for (s=[-1,1]) translate([s*pin_off, -arm_len, arm_t-0.1]) {
                 cylinder(d=pin_d, h=1.7);
                 translate([0,0,1.7]) cylinder(d1=pin_d, d2=pin_d-0.8, h=0.4);  // lead-in
+                // root fillet so the pin cannot snap off flush with the face
+                rotate_extrude($fn=48) difference() {
+                    square([pin_d/2 + pin_fillet, pin_fillet + 0.1]);
+                    translate([pin_d/2 + pin_fillet, pin_fillet + 0.1]) circle(r=pin_fillet, $fn=24);
+                }
             }
         }
         translate([0,0,-1]) cylinder(d=m3_clear, h=arm_t+ros_h+2);
@@ -266,7 +272,11 @@ module stud() {
         translate([0,0,slot_skin]) linear_extrude(nut_slot_t)
             polygon([[-nut_slot_w/2, flange_d/2 - 3], [nut_slot_w/2, flange_d/2 - 3],
                      [nut_slot_w/2 + 2, flange_d/2 + 0.5], [-nut_slot_w/2 - 2, flange_d/2 + 0.5]]);
-        for (s=[-1,1]) translate([s*pin_off,0,-0.01]) cylinder(d=pin_d+0.4, h=2.4);
+        for (s=[-1,1]) translate([s*pin_off,0,-0.01]) {
+            cylinder(d=pin_d+0.4, h=2.4);
+            // entry chamfer clears the pin's root fillet so the stud seats flat
+            cylinder(d1=pin_d + 2*pin_fillet + 0.6, d2=pin_d+0.4, h=pin_fillet + 0.1);
+        }
     }
 }
 
