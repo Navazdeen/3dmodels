@@ -17,7 +17,7 @@
 // loose, and print-in-place balls fuse or rattle depending on the printer.
 // A bolted clamp tolerates +/-0.3 mm print error and can be re-tightened.
 //
-// Hardware: 1x M3x16 + nut (rosette), 1x M3x8 + nut (stud),
+// Hardware: 1x M3x16 + nut (rosette), 1x M3x12 + M3 nyloc nut (stud, side slot),
 //           2x M3x12 self-tapping into plastic (socket cap),
 //           head screws: reuse / lengthen the head's own M3 screws.
 //
@@ -58,7 +58,13 @@ ball_d    = 12;
 neck_d    = 6;
 neck_len  = 5;
 flange_d  = 19;
-flange_h  = 4;
+// Stud nut: side-loaded slot, so the nut cannot drop out along the bolt axis,
+// and a nylon-insert lock nut (nyloc) so vibration cannot back it off.
+nyloc_t     = 4.0;               // M3 nyloc height (DIN 985); use 2.4 for a plain nut
+nut_slot_t  = nyloc_t + 0.2;
+nut_slot_w  = 5.6;               // snug on the 5.5 mm flats: the nut pushes in and stays
+slot_skin   = 1.6;               // floor and roof around the slot (4 layers at 0.4)
+flange_h    = nut_slot_t + 2*slot_skin;
 pin_d     = 2.5;  pin_off = 6.5;   // keeps >=1.5 mm wall to nut trap and rim
 sock_wall = 3;
 sock_gap  = 0.5;      // per half; leaves 1 mm for the screws to squeeze
@@ -196,8 +202,19 @@ module stud() {
                 translate([neck_d/2 + neck_fillet, neck_fillet + 0.1]) circle(r=neck_fillet, $fn=32);
             }
         }
-        translate([0,0,-1]) cylinder(d=m3_clear, h=flange_h+4);
-        translate([0,0,-0.01]) nut_trap();
+        // bolt hole runs on into the neck so the bolt tip clears the nut
+        translate([0,0,-1]) cylinder(d=m3_clear, h=flange_h + 4);
+        // side-loading nut slot: open toward +Y only. Once the bolt passes
+        // through the nut it cannot move in any direction, tight or loose.
+        translate([0,0,slot_skin]) linear_extrude(nut_slot_t) hull() {
+            rotate(30) circle(d=nut_slot_w/cos(30), $fn=6);   // flats face +/-X
+            translate([-nut_slot_w/2, 0]) square([nut_slot_w, flange_d]);
+        }
+        // flared mouth: no knife-edge where the slot meets the round rim,
+        // and the nut starts in easily
+        translate([0,0,slot_skin]) linear_extrude(nut_slot_t)
+            polygon([[-nut_slot_w/2, flange_d/2 - 3], [nut_slot_w/2, flange_d/2 - 3],
+                     [nut_slot_w/2 + 2, flange_d/2 + 0.5], [-nut_slot_w/2 - 2, flange_d/2 + 0.5]]);
         for (s=[-1,1]) translate([s*pin_off,0,-0.01]) cylinder(d=pin_d+0.4, h=2.4);
     }
 }
