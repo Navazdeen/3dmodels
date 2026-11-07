@@ -1,148 +1,206 @@
-// Nozzle camera mount for Anycubic Kobra 2 Neo
-// Camera: generic 1/4" CMOS 640x480 USB mini webcam (square body, silver focus ring)
+// Nozzle camera mount for Anycubic Kobra 2 Neo — LEFT side of print head
+// Camera: 1/4" CMOS 640x480 USB mini webcam with collapsible cable
+//          (vendor-listed body size 40 x 30 x 15 mm, Robu.in / Zbotic)
 //
-// Three parts joined by M3 bolt hinges (friction-tight, adjustable angle):
-//   1. base   - bolts to the print head (slotted holes, adjust spacing below)
-//   2. arm    - drops down/out from the head, hinge at both ends
-//   3. cradle - sleeve that holds the camera body, lens window at front
+// Kinematic chain (head -> camera):
+//   base   : plate bolted to the left side of the head, with a toothed rosette
+//   arm    : flat bar; rosette at top (locks at 15 deg steps, any angle in the
+//            plane of the head's side), 2 locating pins + M3 hole at bottom
+//   stud   : separate ball stud, bolts to the arm end, printed UPRIGHT so the
+//            ball is a clean full sphere (no supports, no print-in-place)
+//   cradle : holds the camera; lower half of a split ball socket on top
+//   cap    : upper half of the socket. Two M3 screws squeeze cap onto the ball
+//            -> adjustable friction, then lock tight. Gives +/-30 deg tilt and
+//            360 deg roll at the camera.
 //
-// !!! ALL "MEASURE" VALUES ARE PLACEHOLDERS. Measure your camera and your
-// !!! print head with calipers and update them before printing.
+// Why a split clamp instead of a snap/print-in-place ball: snap sockets wear
+// loose, and print-in-place balls fuse or rattle depending on the printer.
+// A bolted clamp tolerates +/-0.3 mm print error and can be re-tightened.
 //
-// Render a single part:  set PART below, F6, then export STL.
-// PART = "all" shows an assembled preview (not for printing).
+// Hardware: 1x M3x16 + nut (rosette), 1x M3x8 + nut (stud),
+//           2x M3x12 self-tapping into plastic (socket cap),
+//           head screws: reuse / lengthen the head's own M3 screws.
+//
+// !!! Values marked MEASURE are not verified against real parts. !!!
 
-PART = "all";   // "all" | "base" | "arm" | "cradle" | "print" (all three laid flat)
+PART = "print"; // "print" | "base" | "arm" | "stud" | "cradle" | "cap"
 
-/* ---------- Camera (MEASURE) ---------- */
-cam_w      = 25.0;   // body width  (X)              MEASURE
-cam_h      = 25.0;   // body height (Z)              MEASURE
-cam_d      = 12.0;   // body depth, front to back    MEASURE
-lens_d     = 15.0;   // focus-ring outer diameter    MEASURE (+ clearance added)
-lens_off_x = 0.0;    // lens centre offset from body centre, X  MEASURE
-lens_off_z = 0.0;    // lens centre offset from body centre, Z  MEASURE
-cable_w    = 5.0;    // cable exit width at back      MEASURE
-fit        = 0.4;    // clearance around camera body (per side)
+/* ---------- Camera ---------- */
+cam_w      = 40.0;   // body width              (vendor spec) MEASURE
+cam_h      = 30.0;   // body height             (vendor spec) MEASURE
+cam_d      = 10.0;   // body depth WITHOUT lens (15 incl. lens, est.) MEASURE
+lens_d     = 22.0;   // silver focus-ring outer dia (est. from photo) MEASURE
+lens_off_x = 4.0;    // lens centre right of body centre (est. from photo) MEASURE
+lens_off_z = 0.0;    // lens centre above body centre MEASURE
+fit        = 0.4;    // clearance per side
 
-/* ---------- Print-head attachment (MEASURE) ---------- */
-// Base plate bolts to two screw holes on the head (e.g. the hotend cover /
-// fan shroud screws). Holes are slots, so spacing tolerates +/- slot_len/2.
-hole_spacing = 20.0;  // centre-to-centre of the two head screws   MEASURE
-screw_d      = 3.4;   // M3 clearance
-screw_head_d = 6.0;
-slot_len     = 6.0;   // total slot travel
-base_w       = hole_spacing + 14;
-base_h       = 14;
-base_t       = 3.0;
+/* ---------- Head attachment ---------- */
+hole_spacing = 20.0;  // centre-to-centre of the two head screws    MEASURE
+screw_d      = 3.4;
+slot_len     = 8.0;   // slot travel: spacing works within +/-4 mm
+base_t       = 4.0;
 
-/* ---------- Arm ---------- */
-arm_len  = 35;        // hinge-to-hinge distance; sets how far below/out the cam sits
-arm_w    = 10;
+/* ---------- Arm / rosette ---------- */
+arm_len   = 40;       // rosette centre to ball-stud centre
+arm_w     = 10;
+arm_t     = 5;
+ros_r     = 10;       // rosette radius
+ros_n     = 24;       // teeth -> 15 deg steps
 
-/* ---------- Hinge ---------- */
-hinge_d     = 10;     // knuckle outer diameter
-hinge_bolt  = 3.3;    // M3 through-bolt
-nut_af      = 5.7;    // M3 nut across flats (+clearance)
-nut_t       = 2.6;
-tongue_t    = 4.0;    // middle knuckle thickness
-fork_t      = 3.0;    // each outer fork prong thickness
-hinge_gap   = 0.3;    // clearance between tongue and prongs
+/* ---------- Ball joint ---------- */
+ball_d    = 14;
+neck_d    = 6;
+neck_len  = 5;
+flange_d  = 16;
+flange_h  = 4;
+pin_d     = 2.5;  pin_off = 5;
+sock_wall = 3;
+sock_gap  = 0.5;      // per half; leaves 1 mm for the screws to squeeze
+cone_half = 55;       // socket mouth half-angle (tilt range = this - neck angle)
 
+m3_clear = 3.4; m3_pilot = 2.8; nut_af = 5.7; nut_t = 2.6;
 wall = 2.0;
-$fn  = 48;
+$fn  = 64;
 
 /* ================= helpers ================= */
-fork_total = tongue_t + 2*(fork_t + hinge_gap);
+module nut_trap(h=nut_t+0.2) cylinder(d=nut_af/cos(30), h=h, $fn=6);
+module slot(len, d, h) hull() for (x=[-len/2, len/2]) translate([x,0,0]) cylinder(d=d, h=h);
 
-// Single knuckle (tongue), axis along X, centred at origin
-module tongue() {
+// Face-gear rosette on z=0, teeth pointing +z. Pyramidal teeth (apex at
+// centre) so two identical rosettes mesh across the whole face.
+module rosette(r=ros_r, n=ros_n) {
+    a = 180/n;  h = r*sin(a);
+    // teeth sink 0.5 mm into the body and the shared apex is cut away,
+    // so the union is a clean manifold
     difference() {
-        rotate([0,90,0]) cylinder(d=hinge_d, h=tongue_t, center=true);
-        rotate([0,90,0]) cylinder(d=hinge_bolt, h=tongue_t+1, center=true);
-    }
-}
-
-// Fork (two prongs), axis along X, centred at origin, nut trap on +X side
-module fork() {
-    off = tongue_t/2 + hinge_gap + fork_t/2;
-    difference() {
-        union() for (s=[-1,1]) translate([s*off,0,0])
-            rotate([0,90,0]) cylinder(d=hinge_d, h=fork_t, center=true);
-        rotate([0,90,0]) cylinder(d=hinge_bolt, h=fork_total+1, center=true);
-        translate([off + fork_t/2 - nut_t + 0.01, 0, 0])
-            rotate([0,90,0]) cylinder(d=nut_af/cos(30), h=nut_t+0.1, $fn=6);
-    }
-}
-
-module slot(len, d, h) {
-    hull() for (x=[-len/2, len/2]) translate([x,0,0]) cylinder(d=d, h=h);
-}
-
-/* ================= parts ================= */
-
-// BASE: flat plate in XZ plane (back face against head at y=0), fork hanging below
-module base() {
-    difference() {
-        translate([-base_w/2, 0, -base_h/2]) cube([base_w, base_t, base_h]);
-        for (s=[-1,1]) translate([s*hole_spacing/2, -0.5, 0]) rotate([-90,0,0]) {
-            slot(slot_len, screw_d, base_t+1);
+        intersection() {
+            union() for (i=[0:n-1]) rotate([0,0,i*360/n])
+                hull() {
+                    polyhedron(points=[[0,0,0],[r*cos(a),-r*sin(a),0],[r*cos(a),r*sin(a),0],[r,0,h]],
+                               faces=[[0,1,2],[0,3,1],[0,2,3],[1,3,2]]);
+                    translate([0,0,-0.5]) cylinder(r=0.01, h=0.01);
+                    translate([r*cos(a)*0.99,0,-0.5]) cylinder(r=r*sin(a)*0.99, h=0.5, $fn=4);
+                }
+            translate([0,0,-0.5]) cylinder(r=r, h=h+1);
         }
+        translate([0,0,-1]) cylinder(r=3, h=h+2);
     }
-    // stem down to the fork
-    translate([-fork_total/2, 0, -base_h/2 - hinge_d/2]) cube([fork_total, base_t, hinge_d/2]);
-    translate([0, hinge_d/2, -base_h/2 - hinge_d/2]) fork();
-    // bridge plate to knuckles
-    translate([-fork_total/2, 0, -base_h/2 - hinge_d/2]) cube([fork_total, hinge_d/2, 0.01 + hinge_d/2]);
+}
+ros_h = ros_r*sin(180/ros_n);
+
+/* ================= parts (all modelled in print orientation) ================= */
+
+// BASE — flat on bed. Head-facing side is the bed side.
+base_w = hole_spacing + slot_len + 10;
+base_l = 14;
+module base() {
+    lobe_y = -(base_l/2 + ros_r - 2);
+    difference() {
+        union() {
+            translate([-base_w/2, -base_l/2, 0]) cube([base_w, base_l, base_t]);
+            hull() {
+                translate([-ros_r, -base_l/2, 0]) cube([2*ros_r, 1, base_t]);
+                translate([0, lobe_y, 0]) cylinder(r=ros_r, h=base_t);
+            }
+            translate([0, lobe_y, base_t - 0.01]) rosette();
+        }
+        for (s=[-1,1]) translate([s*hole_spacing/2, 0, -1]) slot(slot_len, screw_d, base_t+2);
+        translate([0, lobe_y, -1]) cylinder(d=m3_clear, h=base_t+ros_h+2);
+        translate([0, lobe_y, -0.01]) nut_trap();
+    }
 }
 
-// ARM: tongue at top (origin), fork at bottom (z = -arm_len)
+// ARM — flat on bed. Rosette at origin (top face), stud pad at (0,-arm_len).
 module arm() {
-    tongue();
-    translate([0,0,-arm_len]) fork();
-    translate([-tongue_t/2, -arm_w/2*0.6, -arm_len + hinge_d/2 - 1])
-        cube([tongue_t, arm_w*0.6, arm_len - hinge_d + 2]);
-    // widen just above the fork so it meets both prongs
-    hull() {
-        translate([-tongue_t/2, -arm_w*0.3, -arm_len + hinge_d/2 + 6]) cube([tongue_t, arm_w*0.6, 0.1]);
-        translate([-fork_total/2, -hinge_d/2*0.8, -arm_len + hinge_d/2 - 1]) cube([fork_total, hinge_d*0.8, 0.1]);
+    difference() {
+        union() {
+            cylinder(r=ros_r, h=arm_t);
+            translate([0,0,arm_t-0.01]) rosette();
+            translate([0,-arm_len,0]) cylinder(d=flange_d+2, h=arm_t);
+            translate([-arm_w/2, -arm_len, 0]) cube([arm_w, arm_len, arm_t]);
+            for (s=[-1,1]) translate([s*pin_off, -arm_len, arm_t-0.01]) cylinder(d=pin_d, h=2);
+        }
+        translate([0,0,-1]) cylinder(d=m3_clear, h=arm_t+ros_h+2);
+        translate([0,-arm_len,-1]) cylinder(d=m3_clear, h=arm_t+2);
+        translate([0,-arm_len,-1]) cylinder(d=6, h=1+1.5);   // M3 head recess
     }
 }
 
-// CRADLE: sleeve around camera. Camera looks toward -Y, lens window in front wall.
-// Top is open-ish with retaining lips so the camera snaps in from the back.
+// STUD — upright on its flange. Full sphere on top.
+ball_c = flange_h + neck_len + ball_d/2 - 1;
+module stud() {
+    difference() {
+        union() {
+            cylinder(d=flange_d, h=flange_h);
+            cylinder(d=neck_d, h=ball_c);
+            translate([0,0,ball_c]) sphere(d=ball_d);
+            // fillet neck/flange
+            translate([0,0,flange_h-0.01]) cylinder(d1=neck_d+4, d2=neck_d, h=2);
+        }
+        translate([0,0,-1]) cylinder(d=m3_clear, h=flange_h+4);
+        translate([0,0,-0.01]) nut_trap();
+        for (s=[-1,1]) translate([s*pin_off,0,-0.01]) cylinder(d=pin_d+0.4, h=2.4);
+    }
+}
+
+// Socket block geometry (shared by cradle and cap)
+sock_s   = ball_d + 2*sock_wall;   // block width/depth
+sock_ear = 7;                      // ear beyond block for each screw
+sock_bx  = sock_s/2 + sock_ear/2;  // screw x offset
+sock_hh  = ball_d/2 + sock_wall;   // half-height of block
+module socket_mouth() {
+    // cone opening toward +Y (back of camera), where the stud enters
+    rotate([-90,0,0]) cylinder(r1=0, r2=40*tan(cone_half), h=40);
+}
+
+// CRADLE — upright, bottom on bed. Camera looks -Y; inserts from the open back.
 module cradle() {
     iw = cam_w + 2*fit;  ih = cam_h + 2*fit;  id = cam_d + fit;
     ow = iw + 2*wall;    oh = ih + 2*wall;    od = id + wall;
+    bc = [0, od/2, oh + sock_hh];            // ball centre
     difference() {
-        translate([-ow/2, 0, -oh/2]) cube([ow, od, oh]);
-        // camera pocket, open at the back (+Y)
-        translate([-iw/2, wall, -ih/2]) cube([iw, id + 1, ih]);
-        // lens window
-        translate([lens_off_x, -0.5, lens_off_z]) rotate([-90,0,0]) cylinder(d=lens_d + 1.0, h=wall+1);
-        // cable notch at back bottom
-        translate([-cable_w/2, wall, -oh/2 - 0.5]) cube([cable_w, id + 1, wall + 1]);
+        union() {
+            translate([-ow/2, 0, 0]) cube([ow, od, oh]);
+            // lower socket half + ears
+            translate([-(sock_s/2+sock_ear), od/2 - sock_s/2, oh - 0.01])
+                cube([sock_s + 2*sock_ear, sock_s, sock_hh - sock_gap + 0.01]);
+        }
+        translate([-iw/2, wall, wall]) cube([iw, id + 1, ih]);                     // pocket
+        translate([lens_off_x, -0.5, oh/2 + lens_off_z])
+            rotate([-90,0,0]) cylinder(d=lens_d + 1.0, h=wall + 1);               // lens window
+        translate(bc) sphere(d=ball_d + 0.2);
+        translate(bc) socket_mouth();
+        for (s=[-1,1]) translate([s*sock_bx, od/2, oh + 1]) cylinder(d=m3_pilot, h=sock_hh + 1);
     }
-    // retaining lips at the back opening (top and bottom), slight snap
-    for (s=[-1,1]) translate([-iw/2, od - 1.2, s>0 ? ih/2 - 0.8 : -ih/2])
-        cube([iw, 1.2, 0.8]);
-    // tongue on top for the arm's fork
-    translate([0, od/2, oh/2 + hinge_d/2 - 1]) tongue();
-    translate([-tongue_t/2, od/2 - hinge_d/2 + 1, oh/2 - 0.01]) cube([tongue_t, hinge_d - 2, hinge_d/2 - 1]);
+    // snap lips at the back opening, top and bottom
+    translate([-iw/2, od - 1.2, wall])            cube([iw, 1.2, 0.8]);
+    translate([-iw/2, od - 1.2, wall + ih - 0.8]) cube([iw, 1.2, 0.8]);
+}
+
+// CAP — split face on bed, cup facing up.
+module cap() {
+    difference() {
+        translate([-(sock_s/2+sock_ear), -sock_s/2, 0])
+            cube([sock_s + 2*sock_ear, sock_s, sock_hh - sock_gap]);
+        translate([0,0,-sock_gap]) sphere(d=ball_d + 0.2);
+        translate([0,0,-sock_gap]) socket_mouth();
+        for (s=[-1,1]) translate([s*sock_bx, 0, -1]) {
+            cylinder(d=m3_clear, h=sock_hh + 2);
+            translate([0,0,sock_hh - sock_gap - 2.5 + 1]) cylinder(d=6, h=5); // head counterbore
+        }
+    }
 }
 
 /* ================= layout ================= */
 if (PART == "base")   base();
-if (PART == "arm")    rotate([0,90,0]) arm();               // lay flat on side
-if (PART == "cradle") rotate([90,0,0]) translate([0,0,0]) cradle(); // lens face down
+if (PART == "arm")    arm();
+if (PART == "stud")   stud();
+if (PART == "cradle") cradle();
+if (PART == "cap")    cap();
 if (PART == "print") {
-    translate([-40,0,0]) rotate([90,0,0]) base();
-    translate([0,0,tongue_t/2]) rotate([0,90,0]) arm();
-    translate([45,0,0]) rotate([90,0,0]) cradle();
-}
-if (PART == "all") {
-    color("orange") base();
-    hz = -base_h/2 - hinge_d/2;  hy = hinge_d/2;
-    color("gray")   translate([0, hy, hz]) arm();
-    iw = cam_w + 2*fit; id = cam_d + fit; oh = cam_h + 2*fit + 2*wall;
-    color("orange") translate([0, hy - (id+wall)/2, hz - arm_len - oh/2 - hinge_d/2 + 1]) cradle();
+    translate([-30, 45, 0]) base();
+    translate([15, 30, 0])  arm();
+    translate([20, -30, 0]) stud();
+    translate([-45, -40, 0]) cradle();
+    translate([50, 10, 0])  cap();
 }
