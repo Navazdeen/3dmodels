@@ -33,12 +33,13 @@ lens_d     = 22.0;   // silver focus-ring outer dia (est. from photo) MEASURE
 lens_off_x = 4.0;    // lens centre right of body centre (est. from photo) MEASURE
 lens_off_z = 0.0;    // lens centre above body centre MEASURE
 fit        = 0.4;    // clearance per side
+lip_zone   = 2.4;    // pocket depth behind the camera for the snap lips + lead-in
 
 /* ---------- Head attachment ---------- */
 hole_spacing = 20.0;  // centre-to-centre of the two head screws    MEASURE
 screw_d      = 3.4;
 slot_len     = 8.0;   // slot travel: spacing works within +/-4 mm
-base_t       = 4.0;
+base_t       = 4.5;   // >= 1.5 mm over the nut trap
 
 /* ---------- Arm / rosette ---------- */
 arm_len   = 40;       // rosette centre to ball-stud centre
@@ -59,7 +60,7 @@ sock_gap  = 0.5;      // per half; leaves 1 mm for the screws to squeeze
 cone_half = 55;       // socket mouth half-angle (tilt range = this - neck angle)
 
 m3_clear = 3.4; m3_pilot = 2.8; nut_af = 5.7; nut_t = 2.6;
-wall = 2.0;
+wall = 2.4;   // 6 perimeters at 0.4; leaves >= 1 mm at filleted wall ends
 $fn  = 64;
 
 /* ================= helpers ================= */
@@ -88,37 +89,84 @@ module rosette(r=ros_r, n=ros_n) {
 }
 ros_h = ros_r*sin(180/ros_n);
 
+/* ================= edge finishing ================= */
+// Every exposed edge is rounded. Rules (FDM):
+//  - edges on the bed get a 45 deg chamfer, never a fillet (a bottom fillet is
+//    an overhang that curls and makes elephant-foot worse)
+//  - top and vertical edges get fillets
+//  - inside corners of outlines get fillets (fewer stress risers)
+//  - functional faces stay sharp: rosette teeth, ball seat, socket split face
+edge_r   = 1.5;   // fillet radius on outer edges
+bed_ch   = 0.5;   // chamfer on bed edges
+inner_r  = 3;     // fillet in concave outline corners
+hole_ch  = 0.5;   // chamfer at hole entries
+$fn_tool = 24;
+
+// convex tool for minkowski: chamfered bottom (c), rounded top (r)
+module edge_tool(r=edge_r, c=bed_ch) hull() {
+    cylinder(r1=r-c, r2=r, h=max(c,0.001), $fn=$fn_tool);
+    translate([0,0,max(c,0.001)]) intersection() {
+        sphere(r, $fn=$fn_tool);
+        cylinder(r=r, h=r, $fn=$fn_tool);
+    }
+}
+// extrude a 2D outline to height H with every outer edge finished
+module rslab(H, r=edge_r, c=bed_ch, fr=inner_r) {
+    minkowski() {
+        linear_extrude(H - max(c,0.001) - r)
+            offset(delta=-r) offset(r=fr) offset(delta=-fr) children();
+        edge_tool(r, c);
+    }
+}
+// chamfer cone for a hole entry at z=0 going down (place at the face)
+module hole_chamfer(d, ch=hole_ch) translate([0,0,-ch]) cylinder(d1=d, d2=d+2*ch, h=ch+0.01);
+
 /* ================= parts (all modelled in print orientation) ================= */
 
 // BASE — flat on bed. Head-facing side is the bed side.
 base_w = hole_spacing + slot_len + 10;
 base_l = 14;
+lobe_r = ros_r + edge_r + 0.5;   // flat ring left round the rosette after the fillet
 module base() {
     lobe_y = -(base_l/2 + ros_r - 2);
     difference() {
         union() {
-            translate([-base_w/2, -base_l/2, 0]) cube([base_w, base_l, base_t]);
-            hull() {
-                translate([-ros_r, -base_l/2, 0]) cube([2*ros_r, 1, base_t]);
-                translate([0, lobe_y, 0]) cylinder(r=ros_r, h=base_t);
+            rslab(base_t) {
+                square([base_w, base_l], center=true);
+                hull() {
+                    translate([-lobe_r, -base_l/2]) square([2*lobe_r, 1]);
+                    translate([0, lobe_y]) circle(r=lobe_r, $fn=64);
+                }
             }
             translate([0, lobe_y, base_t - 0.01]) rosette();
         }
-        for (s=[-1,1]) translate([s*hole_spacing/2, 0, -1]) slot(slot_len, screw_d, base_t+2);
+        for (s=[-1,1]) translate([s*hole_spacing/2, 0, 0]) {
+            translate([0,0,-1]) slot(slot_len, screw_d, base_t+2);
+            // chamfered slot entry on the outer face
+            translate([0,0,base_t - hole_ch]) hull() for (x=[-slot_len/2, slot_len/2])
+                translate([x,0,0]) cylinder(d1=screw_d, d2=screw_d+2*hole_ch, h=hole_ch+0.01);
+        }
         translate([0, lobe_y, -1]) cylinder(d=m3_clear, h=base_t+ros_h+2);
         translate([0, lobe_y, -0.01]) nut_trap();
     }
 }
 
 // ARM — flat on bed. Rosette at origin (top face), stud pad at (0,-arm_len).
+pad_d = flange_d + 2*edge_r + 1;
 module arm() {
     difference() {
         union() {
-            cylinder(r=ros_r, h=arm_t);
+            rslab(arm_t) {
+                circle(r=lobe_r, $fn=64);
+                translate([0,-arm_len]) circle(d=pad_d, $fn=64);
+                translate([-arm_w/2, -arm_len]) square([arm_w, arm_len]);
+            }
             translate([0,0,arm_t-0.01]) rosette();
-            translate([0,-arm_len,0]) cylinder(d=flange_d+2, h=arm_t);
-            translate([-arm_w/2, -arm_len, 0]) cube([arm_w, arm_len, arm_t]);
-            for (s=[-1,1]) translate([s*pin_off, -arm_len, arm_t-0.01]) cylinder(d=pin_d, h=2);
+            // features sink 0.1 mm: the faceted fillet top sits ~0.02 mm below nominal
+            for (s=[-1,1]) translate([s*pin_off, -arm_len, arm_t-0.1]) {
+                cylinder(d=pin_d, h=1.7);
+                translate([0,0,1.7]) cylinder(d1=pin_d, d2=pin_d-0.8, h=0.4);  // lead-in
+            }
         }
         translate([0,0,-1]) cylinder(d=m3_clear, h=arm_t+ros_h+2);
         translate([0,-arm_len,-1]) cylinder(d=m3_clear, h=arm_t+2);
@@ -128,14 +176,18 @@ module arm() {
 
 // STUD — upright on its flange. Full sphere on top.
 ball_c = flange_h + neck_len + ball_d/2 - 1;
+neck_fillet = 2;
 module stud() {
     difference() {
         union() {
-            cylinder(d=flange_d, h=flange_h);
+            rslab(flange_h, r=1.2, c=bed_ch) circle(d=flange_d, $fn=64);
             cylinder(d=neck_d, h=ball_c);
             translate([0,0,ball_c]) sphere(d=ball_d);
-            // fillet neck/flange
-            translate([0,0,flange_h-0.01]) cylinder(d1=neck_d+4, d2=neck_d, h=2);
+            // true concave fillet between neck and flange
+            translate([0,0,flange_h - 0.1]) rotate_extrude($fn=64) difference() {
+                square([neck_d/2 + neck_fillet, neck_fillet + 0.1]);
+                translate([neck_d/2 + neck_fillet, neck_fillet + 0.1]) circle(r=neck_fillet, $fn=32);
+            }
         }
         translate([0,0,-1]) cylinder(d=m3_clear, h=flange_h+4);
         translate([0,0,-0.01]) nut_trap();
@@ -151,57 +203,83 @@ sock_hh  = ball_d/2 + sock_wall;   // cap height (+gap)
 // lower half is taller: the 55 deg mouth cone must exit the back face
 // above the cradle top wall, or it cuts through into the camera pocket
 sock_low = ceil(sock_s/2 * tan(cone_half)) + 1;
+sock_W   = sock_s + 2*sock_ear;
 module socket_mouth() {
     // cone opening toward +Y (back of camera), where the stud enters
     rotate([-90,0,0]) cylinder(r1=0, r2=40*tan(cone_half), h=40);
 }
+// rim chamfer where the ball cup meets the split face (face at z=0, cup below)
+module cup_rim(gap_to_centre) {
+    rr = sqrt(pow((ball_d+0.2)/2,2) - pow(gap_to_centre,2));
+    hole_chamfer(2*rr, 0.6);
+}
 
 // CRADLE — upright, bottom on bed. Camera looks -Y; inserts from the open back.
 module cradle() {
-    iw = cam_w + 2*fit;  ih = cam_h + 2*fit;  id = cam_d + fit;
+    iw = cam_w + 2*fit;  ih = cam_h + 2*fit;  id = cam_d + fit + lip_zone;
     ow = iw + 2*wall;    oh = ih + 2*wall;    od = id + wall;
     ys = od - sock_s;                        // socket block flush with back face
     ov = -ys;                                // overhang past the front face
     bc = [0, od - sock_s/2, oh + sock_low];  // ball centre
+    top = oh + sock_low - sock_gap;          // split face of the lower half
     difference() {
         union() {
-            translate([-ow/2, 0, 0]) cube([ow, od, oh]);
-            // lower socket half + ears
-            translate([-(sock_s/2+sock_ear), ys, oh - 0.01])
-                cube([sock_s + 2*sock_ear, sock_s, sock_low - sock_gap + 0.01]);
-            // 45 deg gusset under the front overhang (prints without support)
-            if (ov > 0) hull() {
-                translate([-(sock_s/2+sock_ear), ys, oh - 0.01]) cube([sock_s + 2*sock_ear, ov, 0.01]);
-                translate([-(sock_s/2+sock_ear), -0.01, oh - ov]) cube([sock_s + 2*sock_ear, 0.02, ov]);
+            translate([0, od/2, 0]) rslab(oh) square([ow, od], center=true);
+            // lower socket half + ears: sits on the cradle, so no bottom chamfer
+            translate([0, ys + sock_s/2, oh - edge_r - 0.1]) rslab(top - oh + edge_r + 0.1, c=0) square([sock_W, sock_s], center=true);
+            // rounded 45 deg gusset under the front overhang (prints without support)
+            if (ov > 0) minkowski() {
+                rotate([90,0,90]) linear_extrude(sock_W - 2*edge_r, center=true)
+                    offset(delta=-1) polygon([[ys, oh+2], [0, oh+2], [0, oh-ov-2]]);
+                sphere(1, $fn=16);
             }
         }
-        translate([-iw/2, wall, wall]) cube([iw, id + 1, ih]);                     // pocket
-        // lens window as a teardrop: the pointed top keeps the overhang at 45 deg
-        translate([lens_off_x, -0.5, oh/2 + lens_off_z]) rotate([-90,0,0])
-            linear_extrude(wall + 1) hull() {
-                circle(d=lens_d + 1.0);
-                translate([0, -(lens_d + 1.0)/2*sqrt(2)]) square(0.01, center=true);
-            }
+        // camera pocket, with a 0.6 mm lead-in chamfer at the open back
+        translate([-iw/2, wall, wall]) cube([iw, id + 1, ih]);
+        translate([0, od + 0.01, wall + ih/2]) rotate([90,0,0])
+            linear_extrude(0.6, scale=[iw/(iw+1.2), ih/(ih+1.2)]) square([iw+1.2, ih+1.2], center=true);
+        // lens window: teardrop (pointed top keeps the overhang at 45 deg),
+        // chamfered on the front face
+        translate([lens_off_x, 0, oh/2 + lens_off_z]) rotate([-90,0,0]) {
+            translate([0,0,-0.5]) linear_extrude(wall + 1) lens_teardrop(lens_d + 1.0);
+            translate([0,0,-0.01]) linear_extrude(0.81, scale=(lens_d+1.0)/(lens_d+2.6))
+                lens_teardrop(lens_d + 2.6);
+        }
         translate(bc) sphere(d=ball_d + 0.2);
         translate(bc) socket_mouth();
-        for (s=[-1,1]) translate([s*sock_bx, od - sock_s/2, oh + 1]) cylinder(d=m3_pilot, h=sock_low + 1);
+        translate([0,0,top]) translate([0, bc[1], 0]) cup_rim(sock_gap);
+        for (s=[-1,1]) translate([s*sock_bx, bc[1], 0]) {
+            translate([0,0,oh + 1]) cylinder(d=m3_pilot, h=sock_low + 1);
+            translate([0,0,top]) hole_chamfer(m3_pilot);
+        }
     }
-    // snap lips at the back opening, top and bottom
-    translate([-iw/2, od - 1.2, wall])            cube([iw, 1.2, 0.8]);
-    translate([-iw/2, od - 1.2, wall + ih - 0.8]) cube([iw, 1.2, 0.8]);
+    // snap lips at the back opening, top and bottom: ramped so the camera
+    // slides in, square face inside so it stays in
+    for (z=[wall, wall + ih]) translate([0, od - 1.0, z]) mirror([0,0, z > wall ? 1 : 0])
+        rotate([90,0,90]) linear_extrude(iw - 2, center=true)
+            polygon([[-1.4, -0.1], [0, -0.1], [-0.6, 0.8], [-1.4, 0.8]]);  // flat-topped ramp, no knife edge
+}
+module lens_teardrop(d) hull() {
+    circle(d=d, $fn=64);
+    translate([0, -d/2*sqrt(2)]) square(0.01, center=true);
 }
 
-// CAP — modelled split-face-down; printed flipped (cap_print) so the cup
-// is an open bowl facing up. Printed the other way the dome ceiling sags.
-module cap() {
+// CAP — modelled directly in print orientation: screw-head face on the bed,
+// split face on top with the cup open upward (prints as a bowl, no sagging dome).
+// Equivalent to the lower half mirrored: ball centre sits sock_gap above the top.
+cap_H = sock_hh - sock_gap;
+module cap_print() {
     difference() {
-        translate([-(sock_s/2+sock_ear), -sock_s/2, 0])
-            cube([sock_s + 2*sock_ear, sock_s, sock_hh - sock_gap]);
-        translate([0,0,-sock_gap]) sphere(d=ball_d + 0.2);
-        translate([0,0,-sock_gap]) socket_mouth();
-        for (s=[-1,1]) translate([s*sock_bx, 0, -1]) {
-            cylinder(d=m3_clear, h=sock_hh + 2);
-            translate([0,0,sock_hh - sock_gap - 3 + 1]) cylinder(d=6, h=5);   // 3 mm head counterbore
+        rslab(cap_H) square([sock_W, sock_s], center=true);
+        translate([0,0,cap_H + sock_gap]) {
+            sphere(d=ball_d + 0.2);
+            rotate([0,0,180]) socket_mouth();          // mouth faces -Y in print frame
+        }
+        translate([0,0,cap_H]) cup_rim(sock_gap);
+        for (s=[-1,1]) translate([s*sock_bx, 0, 0]) {
+            translate([0,0,-1]) cylinder(d=m3_clear, h=cap_H + 2);
+            translate([0,0,-1]) cylinder(d=6, h=1 + 3);              // 3 mm head counterbore (bed side)
+            translate([0,0,cap_H]) hole_chamfer(m3_clear);
         }
     }
 }
@@ -211,7 +289,6 @@ if (PART == "base")   base();
 if (PART == "arm")    arm();
 if (PART == "stud")   stud();
 if (PART == "cradle") cradle();
-module cap_print() translate([0,0,sock_hh - sock_gap]) rotate([180,0,0]) cap();
 if (PART == "cap")    cap_print();
 if (PART == "print") {
     translate([-30, 45, 0]) base();
@@ -227,7 +304,7 @@ if (PART == "print") {
    part in its assembled position so the viewer can explode it. */
 arm_angle = -82.5;    // arm swing about the rosette (display only); n*15+7.5 so the teeth mesh
 _lobe_y = -(base_l/2 + ros_r - 2);
-_iw = cam_w + 2*fit; _ih = cam_h + 2*fit; _id = cam_d + fit;
+_iw = cam_w + 2*fit; _ih = cam_h + 2*fit; _id = cam_d + fit + lip_zone;
 _oh = _ih + 2*wall;  _od = _id + wall;
 _bc = [0, _od - sock_s/2, _oh + sock_low];
 
