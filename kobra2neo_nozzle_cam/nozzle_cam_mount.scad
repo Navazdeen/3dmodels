@@ -78,7 +78,7 @@ flange_h    = nut_slot_t + 2*slot_skin;
 pin_d     = 2.5;  pin_off = 6.5;   // keeps >=1.5 mm wall to nut trap and rim
 sock_wall = 3;
 sock_gap  = 0.5;      // per half; leaves 1 mm for the screws to squeeze
-cone_half = 55;       // socket mouth half-angle (tilt range = this - neck angle)
+cone_half = 58;       // wider to make room for the neck-to-ball fillet       // socket mouth half-angle (tilt range = this - neck angle)
 
 m3_clear = 3.4; m3_pilot = 2.8; nut_af = 5.7; nut_t = 2.6;
 wall = 2.4;   // 6 perimeters at 0.4; leaves >= 1 mm at filleted wall ends
@@ -148,16 +148,16 @@ module hole_chamfer(d, ch=hole_ch) translate([0,0,-ch]) cylinder(d1=d, d2=d+2*ch
 
 // BASE — flat on bed. Head-facing side is the bed side.
 base_w = hole_spacing + slot_len + 10;
-base_l = 14;
+base_l = 22;   // tall enough that the cable clip sits clear of the arm disc
 lobe_r = ros_r + edge_r + 0.5;   // flat ring left round the rosette after the fillet
 // Twist-lock clip for a flat cable. Local frame: cable runs along Y, clip
 // opens toward +Z, floor bottom at z=0. The opening between the rigid lips is
 // just wider than the cable is thick: slide the cable in on its edge, turn it
 // flat, and it cannot come back out. Nothing has to flex, so no thin lips.
 // Edges are rounded (0.3 mm).
-clip_iw   = cable_w + 0.4;                   // channel width (cable lies flat)
-clip_id   = cable_t + 0.3;                   // channel depth under the lips
-clip_open = cable_t + 0.3;                   // gap between lips (cable on edge)
+clip_iw   = cable_w + 0.6;                   // channel width (cable lies flat)
+clip_id   = cable_t + 0.5;                   // channel depth under the lips
+clip_open = cable_t + 0.4;                   // gap between lips (cable on edge)
 clip_lip  = (clip_iw - clip_open)/2;         // lip reach over the cable
 clip_lh   = 0.9;                             // lip thickness
 clip_ow   = clip_iw + 2*clip_wall;
@@ -191,7 +191,7 @@ module base() {
             translate([0, lobe_y, base_t - 0.01]) rosette();
             // cable clip on the outer face, between the head-screw slots;
             // the cable leaves upward to join the head's own cable bundle
-            translate([0, 0, base_t - 0.1]) cable_clip();
+            translate([0, base_l/2 - clip_len/2 - edge_r, base_t - 0.1]) cable_clip();
         }
         for (s=[-1,1]) translate([s*hole_spacing/2, 0, 0]) {
             translate([0,0,-1]) slot(slot_len, screw_d, base_t+2);
@@ -231,17 +231,26 @@ module arm() {
 
 // STUD — upright on its flange. Full sphere on top.
 ball_c = flange_h + neck_len + ball_d/2 - 1;
-neck_fillet = 2;
+neck_fillet = 3;      // neck root: where bending stress peaks
+ball_fillet = 0.8;    // neck-to-ball: small, it eats tilt range
 module stud() {
     difference() {
         union() {
             rslab(flange_h, r=1.2, c=bed_ch) circle(d=flange_d, $fn=64);
             cylinder(d=neck_d, h=ball_c);
             translate([0,0,ball_c]) sphere(d=ball_d);
-            // true concave fillet between neck and flange
+            // concave fillet between neck and flange
             translate([0,0,flange_h - 0.1]) rotate_extrude($fn=64) difference() {
                 square([neck_d/2 + neck_fillet, neck_fillet + 0.1]);
                 translate([neck_d/2 + neck_fillet, neck_fillet + 0.1]) circle(r=neck_fillet, $fn=32);
+            }
+            // concave fillet between neck and ball: circle tangent to both
+            nr = neck_d/2; R = ball_d/2; f = ball_fillet;
+            fx = nr + f;  fd = R + f;  fz = ball_c - sqrt(fd*fd - fx*fx);
+            tz = ball_c - (ball_c - fz)*R/fd;                 // tangent point on the ball
+            rotate_extrude($fn=64) difference() {
+                translate([nr - 0.05, fz]) square([fx - nr + 0.05, tz - fz + 0.05]);
+                translate([fx, fz]) circle(r=f, $fn=32);
             }
         }
         // bolt hole runs on into the neck so the bolt tip clears the nut
@@ -330,26 +339,9 @@ module cradle() {
     // back, the ramps spread the tongues, and the square catch faces close
     // behind the camera's back edge on the left and right.
     y0 = wall + cam_d + fit;                 // camera back face when seated
-    // vertical cable clip on the outside of the side wall, above the tongue.
-    // The cable leaves the camera's back, wraps round the wall's back edge and
-    // runs up through this clip toward the arm. Prints as plain vertical walls.
-    clip_z0 = wall + ih/2 + tongue_h/2 + slit_w + 1.2;
-    translate([cable_side*(ow/2 - 0.1), od - 4.5, clip_z0 + clip_len/2])
-        // clip local Y (cable) -> world Z, local Z (opening) -> outward X
-        multmatrix([[0,0,cable_side,0],[cable_side,0,0,0],[0,1,0,0]]) cable_clip();
-    // 45 deg ribs under the clip's two walls (channel stays open below for the
-    // cable), so the clip's bottom end is not a 4 mm overhang off the wall
-    for (sy=[-1,1]) hull() {
-        translate([cable_side*(ow/2 - 0.1) + (cable_side > 0 ? 0 : -clip_h + 0.3),
-                   od - 4.5 + sy*(clip_iw/2 + clip_wall/2) - clip_wall/2 + 0.3, clip_z0 + 0.3])
-            cube([clip_h - 0.6, clip_wall - 0.6, 0.6]);
-        translate([cable_side*(ow/2 - 0.6) - 0.25,
-                   od - 4.5 + sy*(clip_iw/2 + clip_wall/2) - clip_wall/2 + 0.3, clip_z0 - clip_h])
-            cube([0.5, clip_wall - 0.6, 0.6]);
-    }
-    for (sx=[-1,1]) translate([sx*iw/2, 0, wall + ih/2 - (tongue_h - 2)/2])
-        mirror([sx > 0 ? 1 : 0, 0, 0]) linear_extrude(tongue_h - 2)
-            polygon([[-0.1, y0], [lip_d, y0], [lip_d, y0 + 0.6], [-0.1, y0 + 1.6]]);
+    // No cable clip on the cradle: anything fixed across the tongue slits
+    // locks the tongues. The cable leaves the open back and goes straight
+    // back to the arm (which sits directly behind the camera) as a free loop.
 }
 // Lens window outline. 2D -Y is "up" in the cradle (rotate([-90,0,0]) maps it).
 //  "circle"   : nominal round hole
