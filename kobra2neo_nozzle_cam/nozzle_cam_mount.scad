@@ -17,7 +17,9 @@
 // loose, and print-in-place balls fuse or rattle depending on the printer.
 // A bolted clamp tolerates +/-0.3 mm print error and can be re-tightened.
 //
-// Hardware: 1x M3x16 + nut (rosette), 1x M3x12 + M3 nyloc nut (stud, side slot),
+// Hardware: 1x M3x16 + plain nut + spring washer under the head, blue
+//           threadlocker on the thread (rosette; nut is boxed in by the head),
+//           1x M3x12 + M3 nyloc nut (stud, side slot),
 //           2x M3x12 self-tapping into plastic (socket cap),
 //           head screws: reuse / lengthen the head's own M3 screws.
 //
