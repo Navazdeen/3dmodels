@@ -28,14 +28,13 @@
 PART = "print"; // "print" | "base" | "arm" | "stud" | "cradle" | "cap"
 
 /* ---------- Camera ---------- */
-// Measured by the user: 40 W x 31 H x 15.5 D, lens 24 dia centred at (20, 15.5)
-// on the 40 x 31 face. Whether 15.5 includes the lens ring is not known, so
-// the snap tongues carry a row of teeth that hold any body depth from
-// cam_d_min to cam_d (see "ratchet" below).
+// Measured by the user: 40 W x 31 H x 15.5 D (body only, lens ring extra),
+// lens 24 dia centred at (20, 15.5) on the 40 x 31 face.
 cam_w      = 40.0;   // body width   (measured)
 cam_h      = 31.0;   // body height  (measured)
 cam_d      = 15.5;   // body depth, largest case: 15.5 is the body alone (measured)
-cam_d_min  = 9.5;    // smallest case: 15.5 includes a lens ring of up to 6 mm
+cam_d_min  = 15.5;   // = cam_d -> one exact snap lip. Lower it to get a ratchet
+                     // that holds any body depth from cam_d_min to cam_d
 lens_d     = 24.0;   // lens ring diameter (measured)
 lens_tol   = 2.0;    // hole = lens + 2 mm -> 26 mm (as requested)
 lens_off_x = 0.0;    // lens centred across the width (20 of 40)
