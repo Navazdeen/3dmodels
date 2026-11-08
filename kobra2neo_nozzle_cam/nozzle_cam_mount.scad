@@ -28,17 +28,25 @@
 PART = "print"; // "print" | "base" | "arm" | "stud" | "cradle" | "cap"
 
 /* ---------- Camera ---------- */
-cam_w      = 40.0;   // body width              (vendor spec) MEASURE
-cam_h      = 30.0;   // body height             (vendor spec) MEASURE
-cam_d      = 10.0;   // body depth WITHOUT lens (15 incl. lens, est.) MEASURE
-lens_d     = 22.0;   // silver focus-ring outer dia (est. from photo) MEASURE
-lens_off_x = 4.0;    // lens centre right of body centre (est. from photo) MEASURE
-lens_off_z = 0.0;    // lens centre above body centre MEASURE
+// Measured by the user: 40 W x 31 H x 15.5 D, lens 24 dia centred at (20, 15.5)
+// on the 40 x 31 face. Whether 15.5 includes the lens ring is not known, so
+// the snap tongues carry a row of teeth that hold any body depth from
+// cam_d_min to cam_d (see "ratchet" below).
+cam_w      = 40.0;   // body width   (measured)
+cam_h      = 31.0;   // body height  (measured)
+cam_d      = 15.5;   // body depth, largest case: 15.5 is the body alone (measured)
+cam_d_min  = 9.5;    // smallest case: 15.5 includes a lens ring of up to 6 mm
+lens_d     = 24.0;   // lens ring diameter (measured)
+lens_tol   = 2.0;    // hole = lens + 2 mm -> 26 mm (as requested)
+lens_off_x = 0.0;    // lens centred across the width (20 of 40)
+lens_off_z = 0.0;    // lens centred up the height (15.5 of 31)
 lens_shape = "circle"; // "circle" | "flat" | "teardrop" (see lens_teardrop)
 fit        = 0.4;    // clearance per side
-lip_zone   = 2.4;    // pocket depth behind the camera for the snap lips + lead-in
-lip_d      = 0.6;    // how far each snap lip reaches over the camera's back edge
-tongue_l   = 11;     // free length of the side snap tongues (flex ~1.8 % strain in PETG)
+lip_zone   = 2.4;    // pocket depth behind the deepest catch for the last tooth + lead-in
+lip_d      = 0.8;    // how far each tooth reaches over the camera's back edge
+tooth_p    = 1.8;    // tooth pitch: worst-case front-back play of the camera
+tooth_top  = 0.8;    // flat crest of each tooth: two 0.4 mm lines, prints solid
+tongue_l   = 15;     // free length of the side snap tongues (~1.1 % strain in PETG)
 tongue_h   = 12;     // tongue height
 slit_w     = 1.0;    // slit that frees the tongue
 
@@ -329,9 +337,9 @@ module cradle() {
         // lens window: teardrop (pointed top keeps the overhang at 45 deg),
         // chamfered on the front face
         translate([lens_off_x, 0, oh/2 + lens_off_z]) rotate([-90,0,0]) {
-            translate([0,0,-0.5]) linear_extrude(wall + 1) lens_teardrop(lens_d + 1.0);
-            translate([0,0,-0.01]) linear_extrude(0.81, scale=(lens_d+1.0)/(lens_d+2.6))
-                lens_teardrop(lens_d + 2.6);
+            translate([0,0,-0.5]) linear_extrude(wall + 1) lens_teardrop(lens_d + lens_tol);
+            translate([0,0,-0.01]) linear_extrude(0.81, scale=(lens_d+lens_tol)/(lens_d+lens_tol+1.6))
+                lens_teardrop(lens_d + lens_tol + 1.6);
         }
         // slits that free a snap tongue at the back of each side wall
         for (sx=[-1,1]) for (sz=[-1,1])
@@ -348,7 +356,23 @@ module cradle() {
     // every face prints as a wall (no overhang). The camera pushes in from the
     // back, the ramps spread the tongues, and the square catch faces close
     // behind the camera's back edge on the left and right.
-    y0 = wall + cam_d + fit;                 // camera back face when seated
+    // Ratchet: each tongue carries a row of teeth. Catch faces (square, facing
+    // the front) sit every tooth_p from the deepest body (cam_d) forward to the
+    // shallowest (cam_d_min). Ramps face the back, so the camera slides in and
+    // the first tooth behind its back face holds it. Teeth in front of the
+    // back face just press on the camera's sides (tongue pre-loaded ~0.8 mm).
+    y_deep = wall + cam_d + fit;             // catch for the deepest body
+    n_teeth = ceil((cam_d - cam_d_min)/tooth_p) + 1;
+    for (sx=[-1,1]) translate([sx*iw/2, 0, wall + ih/2 - (tongue_h - 2)/2])
+        mirror([sx > 0 ? 1 : 0, 0, 0]) linear_extrude(tongue_h - 2)
+            // one continuous sawtooth outline on a base strip sunk into the
+            // tongue (separate touching teeth make a non-manifold mesh)
+            let(y_lo = y_deep - (n_teeth-1)*tooth_p)
+            polygon(concat(
+                [[-0.6, y_lo]],
+                [for (k=[n_teeth-1:-1:0]) let(y = y_deep - k*tooth_p)
+                    each [[0.001, y], [lip_d, y], [lip_d, y + tooth_top]]],
+                [[0.001, y_deep + tooth_p], [-0.6, y_deep + tooth_p]]));
     // No cable clip on the cradle: anything fixed across the tongue slits
     // locks the tongues. The cable leaves the open back and goes straight
     // back to the arm (which sits directly behind the camera) as a free loop.
