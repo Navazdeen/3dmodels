@@ -4,7 +4,7 @@ Status: draft for owner approval (2026-11-13). Builder check done, owner answers
 
 ## 1. Intent
 
-One small bench press, printed in PLA on the owner's Kobra 2 Neo, with a
+One **compact** bench press (owner: "small compact, not bigger"; about 270 mm tall, base about 140 × 160 mm), printed in PLA on the owner's Kobra 2 Neo, with a
 swappable head for two jobs:
 
 1. **PCB drilling**: 555 or 775 DC motor with chuck, 0.6–1.0 mm carbide bits.
@@ -42,10 +42,11 @@ Anti-goals (a failure even if it "works")
 |---|---|---|
 | Printer | Anycubic Kobra 2 Neo, 220 × 220 × 250 mm | owner |
 | Material | PLA (all parts) | owner |
-| Guide rods | 2 × Ø8 mm chrome smooth rod, 320 mm, Robu | owner chose |
+| Guide rods | 2 × Ø8 mm chrome smooth rod, 250 mm (one 500 mm Robu rod cut in half) | owner chose |
 | Sliding | printed PLA sleeves in LM8UU-sized pockets (Ø15 × 24 mm) so real LM8UU can drop in later | owner chose |
-| Work clearance | up to 80 mm from base to tool tip, head fully up | owner chose |
-| Height range | tool holder slides in a **vertical** dovetail and locks at any height; the 40 mm plunge works from wherever it's set, so the tip can reach anything from the base surface up to 80 mm | owner chose (fix for builder-check issue) |
+| Work clearance | up to 40 mm from base to tool tip, head fully up | owner chose (compact) |
+| Size | about 270 mm tall; base about 140 × 160 mm; 50 mm reach (rod plane to spindle) | owner chose (compact) |
+| Height range | tool holder slides in a **vertical** dovetail and locks at any height; the 40 mm plunge works from wherever it's set, so the tip can reach anything from the base surface up to 40 mm | owner chose (fix for builder-check issue) |
 | Frame | rods act as the column + printed base, top bridge, 2-part back spine | owner chose |
 | Tool swap | vertical dovetail + one thumb screw (sets height and locks) | owner chose |
 | Plunge | lever arm on a bolt pivot | owner chose |
@@ -89,12 +90,12 @@ Anti-goals (a failure even if it "works")
   │ └──────────┬───────────┘    │
   │       tool holder           │
   │       (555 | 775 | iron)    │
-  │            ▼  80 mm daylight│
+  │            ▼  40 mm daylight│
   └─────────── base ────────────┘
 ```
 
 Parts (all PLA):
-1. **Base**: footprint ≤ 210 × 210 mm, rod sockets with clamp screws, spine
+1. **Base**: footprint about 140 × 160 mm, rod sockets with clamp screws, spine
    mount, flat work area with a replaceable sacrificial pad under the spindle,
    and screw holes so it can be fixed to the bench.
 2. **Top bridge**: rod clamps, lever pivot boss, spring anchor row, spine
@@ -123,8 +124,8 @@ Parts (all PLA):
 9. **Knobs**: printed knob for the dovetail thumb screw.
 
 Shared geometry:
-- **Spindle axis**: centred between the rods, 70 mm in front of the rod plane
-  (Claude's call, to give reach onto a PCB).
+- **Spindle axis**: centred between the rods, 50 mm in front of the rod plane
+  (owner chose compact; reaches the middle of a board about 100 mm wide).
 - **Travel**: 40 mm plunge.
 - The spindle or iron axis must be perpendicular to the base, and stay
   aligned when tool holders are swapped.
@@ -133,7 +134,7 @@ Shared geometry:
 
 | # | Item | Qty | Purpose | Status |
 |---|---|---|---|---|
-| H1 | Ø8 × 320 mm chrome smooth rod (Robu) | 2 | guide column | approved |
+| H1 | Ø8 × 500 mm chrome smooth rod (Robu), cut to 2 × 250 mm | 1 | guide column | approved |
 | H2 | 200-pc spring kit (MTRoyaldia, Amazon) — use ext. 7.14×50.8 or 7.93×44.4 | 1 kit | lever return | approved |
 | H3 | M8 bolt + nyloc nut, length set by the lever boss (about 50–60 mm) | 1 | lever pivot | approved |
 | H4 | M5 screw + heat-set insert | 1 | dovetail thumb screw | approved |
@@ -158,7 +159,7 @@ owner already uses. See §8.
 - Every part fits within 220 × 220 × 250 mm in its print orientation.
 - Height check: with the holder at its lowest setting and full plunge, the tip
   reaches the sacrificial pad. With it at its highest setting and the head up,
-  there is at least 80 mm of clearance.
+  there is at least 40 mm of clearance.
 
 ## 8. Dimensions to verify before modeling (owner measures)
 
