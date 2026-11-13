@@ -7,17 +7,18 @@ module hw_pivot() {   // M8 bolt along +x: head left of the ear, nyloc right of 
     translate([0, 0, lever_x[1]]) cylinder(d = 14.4, h = 8, $fn = 6);   // M8 nyloc, 14.4 across corners
   }
 }
-module hw_link_pin() { translate(link_pin_pos) rotate([0, 90, 0]) translate([0, 0, -m5_insert[1]]) {
-  cylinder(d = 5, h = lever_x[1] - carriage_x + m5_insert[1], $fn = 24);
-  translate([0, 0, lever_x[1] - carriage_x + m5_insert[1]]) cylinder(d = 8.5, h = 5, $fn = 24); } }
+module hw_link_pin() { hx = lever_x[1] + 0.2 + pin_flange[1];   // M5x40 head seat on the spacer flange
+  translate([hx, link_pin_pos[1], link_pin_pos[2]]) rotate([0, 90, 0]) {
+    translate([0, 0, -pin_screw_len]) cylinder(d = 5, h = pin_screw_len, $fn = 24);
+    cylinder(d = 8.5, h = 5, $fn = 24); } }
 module hw_stop_screw() {
   zt = collar_top - collar_h - 1; tip = carriage_z0_up - travel_len;
   translate([stop_contact[0], stop_contact[1], 0]) { translate([0, 0, zt - 5]) cylinder(d = 8.5, h = 5, $fn = 24);  // head sits in the thumbwheel
     translate([0, 0, zt]) cylinder(d = 5, h = tip - zt, $fn = 24); } }
-module hw_spring() {
-  a = lever_pt(spring_d[spring_default], plunge); top = [pivot_pos[1] - spring_d[spring_default], spring_tab_z];
-  hull() { translate([spring_x, a[0], a[1]]) sphere(d = spring_wire_od, $fn = 16);
-           translate([spring_x, top[0], top[1]]) sphere(d = spring_wire_od, $fn = 16); } }
+module hw_spring() {   // kickstand spring: lever tail peg to the base post (default holes)
+  t = tail_pt(tail_d[tail_default], plunge);
+  hull() { translate([ks_x, t[0], t[1]]) sphere(d = ks_od, $fn = 16);
+           translate([ks_x, ks_y, ks_anchor_z]) sphere(d = ks_od, $fn = 16); } }
 module hw_lock_screw() { translate([0, key_back_y, carriage_z0 + lock_z]) rotate([-90, 0, 0]) {
   cylinder(d = 5, h = carriage_y1 + 1 - key_back_y, $fn = 24);
   translate([0, 0, carriage_y1 + 1 - key_back_y]) cylinder(d = 8.5, h = 5, $fn = 24); } }

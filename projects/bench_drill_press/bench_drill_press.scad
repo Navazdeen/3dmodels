@@ -10,23 +10,23 @@ part = "all";
 parts = concat([
   ["base","Base","PLA",[0,0,-30],"print=auto"],
   ["top_bridge","Top bridge","PLA",[0,0,40],"print=x180"],
-  ["spine","Spine","PLA",[0,30,0],"print=x90"],
+  ["spine","Spine","PLA",[0,30,0],"print=x90,z45"],
   ["carriage","Carriage","PLA",[0,-40,0],"print=auto"],
   ["sleeve0","Sleeve 0 (printed, LM8UU size)","PLA",[0,0,0],"flex=carriage","print=auto"],
   ["sleeve1","Sleeve 1 (printed, LM8UU size)","PLA",[0,0,0],"flex=carriage","print=auto"],
   ["sleeve2","Sleeve 2 (printed, LM8UU size)","PLA",[0,0,0],"flex=carriage","print=auto"],
   ["sleeve3","Sleeve 3 (printed, LM8UU size)","PLA",[0,0,0],"flex=carriage","print=auto"],
   ["lever","Lever","PLA",[30,0,0],"print=y-90"],
-  ["cw_lid","Counterweight lid","PLA",[40,0,10],"print=y90"],
   ["collar","Depth-stop collar","PLA",[-30,0,0]],
   ["thumbwheel","Depth-stop thumbwheel","PLA",[-30,0,-10],"print=auto"],
   ["hw_pivot","M8 pivot bolt + nyloc"],
-  ["hw_link_pin","M5 link pin"],
-  ["hw_stop_screw","M5x20 depth-stop screw"],
-  ["hw_spring","Kit extension spring 7.93x44.4","",[0,0,0],"flex=lever,top_bridge"],
+  ["hw_link_pin","M5x40 link pin","",[0,0,0],"flex=pin_spacer"],
+  ["hw_stop_screw","M5x20 depth-stop screw","",[0,0,0],"flex=thumbwheel"],
+  ["hw_spring","Bike kickstand spring (UNVERIFIED size)","",[0,0,0],"flex=lever,base"],
+  ["pin_spacer","Link-pin spacer","PLA",[30,0,0],"print=y90","flex=lever"],
   ["hw_rod","Rod Ø8","Robu chrome rod, cut from one 500 mm",[0,0,0],"pieces=2"],
   ["lock_knob","Holder lock knob","PLA",[0,40,0],"print=auto"],
-  ["hw_lock_screw","M5 holder lock screw"]
+  ["hw_lock_screw","M5x30 holder lock screw","",[0,0,0],"flex=lock_knob"]
 ], tool == "775" ? [["holder_775","775 motor holder","PLA",[0,-40,0],"print=x-90"], ["hw_motor","775 motor (UNVERIFIED size)"], ["hw_chuck_bit","Chuck + bit"]]
  : tool == "555" ? [["holder_555","555 motor holder","PLA",[0,-40,0],"print=x-90"], ["hw_motor","555 motor (UNVERIFIED size)"], ["hw_chuck_bit","Chuck + bit"]]
  : [["holder_iron","Iron holder","PLA",[0,-40,0],"print=x-90"], ["iron_strap","Iron clamp strap","PLA",[0,-70,0],"print=auto"],
@@ -38,7 +38,7 @@ checks = concat([
   ["spine","top_bridge","touch"],
   ["carriage","hw_rod",">=",0.3],
   ["carriage","base",">=",3],
-  ["carriage","top_bridge",">=",3],
+
   ["carriage","spine",">=",2],
   ["sleeve0","hw_rod",">=",0],
   ["sleeve1","hw_rod",">=",0],
@@ -51,7 +51,8 @@ checks = concat([
   ["lever","carriage",">=",1],
   ["collar","carriage",">=",1],
   ["hw_link_pin","carriage","<=",0.8],
-  ["hw_link_pin","lever","<=",0.3],
+  ["pin_spacer","carriage","touch"],
+  ["pin_spacer","lever","<=",0.3],
   ["hw_pivot","lever","touch"],
   ["hw_pivot","top_bridge","touch"]
 ],
@@ -60,8 +61,9 @@ checks = concat([
                     ["holder_iron","carriage","<=",0.4], ["hw_lock_screw","holder_iron","touch"], ["holder_iron","base",">=",1]]
   : [[str("holder_", tool),"carriage","<=",0.4], ["hw_lock_screw",str("holder_", tool),"touch"],
      ["hw_chuck_bit","base",">=",0], [str("holder_", tool),"base",">=",1], [str("holder_", tool),"lever",">=",1]],
+  pose == "up" ? [["carriage","top_bridge","touch"]] : [["carriage","top_bridge",">=",3]],
   pose == "down" ? [["hw_stop_screw","carriage","touch"]] : [["hw_stop_screw","carriage",">=",19]]);
-report = [ ["base w", base_w], ["base d", base_d], ["rod top", rod_top_z], ["rod cut length", rod_len], ["overall h", overall_h], ["pivot", pivot_pos], ["lever angle", lever_angle(plunge)], [str("spring stretch d", spring_d), [for (d = spring_d) spring_stretch(d)]], ["spring len now", spring_len(spring_d[spring_default], plunge)], ["tool", tool], ["holder_z", holder_z], ["tip z", tip_z(holder_z, plunge)] ];
+report = [ ["base w", base_w], ["base d", base_d], ["rod top", rod_top_z], ["rod cut length", rod_len], ["overall h", overall_h], ["pivot", pivot_pos], ["lever angle", lever_angle(plunge)], ["return torque / need (N·mm)", [ret_torque(plunge), head_torque]], ["kickstand len / free", [ks_len(plunge), ks_L0]], ["tool", tool], ["holder_z", holder_z], ["tip z", tip_z(holder_z, plunge)] ];
 module pick(n){ if(part=="all"||part==n) children(); }
 pick("base") base();
 pick("top_bridge") top_bridge();
@@ -69,7 +71,7 @@ pick("spine") spine();
 pick("carriage") carriage();
 for (i = [0:3]) pick(str("sleeve", i)) sleeve_at(i);
 pick("lever") lever();
-pick("cw_lid") cw_lid();
+pick("pin_spacer") pin_spacer();
 pick("collar") collar();
 pick("thumbwheel") thumbwheel();
 pick("hw_pivot") hw_pivot();

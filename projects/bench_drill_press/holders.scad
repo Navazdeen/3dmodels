@@ -69,7 +69,7 @@ module iron_strap() {
 module lock_knob() {
   translate([0, carriage_y1 + 1, carriage_z0 + lock_z]) rotate([-90, 0, 0]) difference() {
     cylinder(d = 20, h = 8, $fn = 24);
-    translate([0, 0, -0.01]) cylinder(d = 8.7, h = 5.2, $fn = 32);     // M5 socket head, press fit
-    translate([0, 0, 4]) cylinder(d = 3, h = 5, $fn = 16);             // hex-key access
+    translate([0, 0, -0.01]) head_pocket(5.2);                          // M5 socket head, crush-rib press fit
+    translate([0, 0, 4]) cylinder(d = knob_key_d, h = 5, $fn = 24);    // 4 mm hex key passes
   }
 }

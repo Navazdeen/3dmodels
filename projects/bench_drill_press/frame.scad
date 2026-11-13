@@ -40,13 +40,24 @@ module rod_clamp_cut(rx, z0, h, rear_y, flip = false, half_w = 200) {
   translate([sx, 0, z0 + h/2]) rotate([-90, 0, 0]) {
     translate([0, 0, rod_y - 12]) tear_cyl(m3_insert[0], 12.1, flip);        // insert, front jaw
     translate([0, 0, rod_y - 0.1]) tear_cyl(m3_clear, rear_y - rod_y + 1, flip);
-    translate([0, 0, rear_y - clamp_cb[1]]) tear_cyl(clamp_cb[0], clamp_cb[1] + 1, flip);
+    jaw = rod_y + clamp_slot/2 + clamp_jaw_t;                              // screw head bears on the thin jaw
+    translate([0, 0, jaw]) tear_cyl(clamp_cb[0], rear_y - jaw + 1, flip);
   }
+  // relief cut behind the jaw so it flexes (from the rod axis out to the side face)
+  translate([min(rx, edge), rod_y + clamp_slot/2 + clamp_jaw_t, z0 - 1]) cube([abs(edge - rx), clamp_slot, h + 2]);
 }
 
+ks_post_top = ks_anchor_z + max(ks_tune) + 8;
+module ks_post() {      // kickstand-spring anchor post, outrigger at the base's rear-right corner
+  x0 = base_w/2 - 14; x1 = ks_x + 8;
+  translate([x0, base_y1 - 2, -base_t]) cube([x1 - x0, ks_y + 10 - base_y1 + 2, base_t]);                           // foot
+  translate([ks_x - 2, ks_y - 9, -base_t + 1]) cube([4, 18, ks_post_top + base_t - 1]);                               // web
+  for (s = [-1, 1]) translate([ks_x, ks_y - 9, 0]) rotate([90, 0, 0]) mirror([0, 0, 1])                                // 45° gussets
+    linear_extrude(18) polygon([[s * 1.9, -0.01], [s * 7.9, -0.01], [s * 1.9, 6]]);
+}
 module base() {
   difference() {
-    slab(-base_w/2, base_w/2, base_y0, base_y1, -base_t, base_t);
+    union() { slab(-base_w/2, base_w/2, base_y0, base_y1, -base_t, base_t); ks_post(); }
     for (x = rod_x) {
       translate([x, rod_y, -rod_socket_depth]) cylinder(d = rod_bore, h = rod_socket_depth + 1, $fn=64);
       translate([x, rod_y, -0.6]) cylinder(d1 = rod_bore, d2 = rod_bore + 1.2, h = 0.61, $fn=64);  // lead-in
@@ -65,13 +76,10 @@ module top_bridge() {
     union() {
       slab(-bridge_w/2, bridge_w/2, bridge_y0, base_y1, bridge_z0, bridge_t);
       // pivot ear, hanging down on the right side
-      translate([bridge_w/2 - 6, rod_y + 2, bridge_z0]) cube([ear_x[1] - bridge_w/2 + 6, base_y1 - rod_y - 2, bridge_t]);  // joins ear & tab to bridge, behind the clamp slot
-      // spring tab over the lever plane, with printed pegs pointing +x
-      // starts outboard of the clamp slot end so it doesn't tie the front clamp jaw
-      translate([bridge_w/2 + 1.5, pivot_pos[1] - spring_d[2] - 6, bridge_top - 14]) cube([lever_x[1] - bridge_w/2 - 1.5, base_y1 - (pivot_pos[1] - spring_d[2] - 6), 14]);
-      for (d = spring_d) translate([lever_x[1] - 0.01, pivot_pos[1] - d, spring_tab_z]) rotate([0, 90, 0]) peg();
+      translate([bridge_w/2 - 6, rod_y + clamp_slot/2 + clamp_jaw_t + clamp_slot + 0.5, bridge_z0]) cube([ear_x[1] - bridge_w/2 + 6, base_y1 - (rod_y + clamp_slot/2 + clamp_jaw_t + clamp_slot + 0.5), bridge_t]);  // joins the ear, behind the clamp relief
+      for (x = [-20, 20]) translate([x - bumper[0]/2, 42, bridge_z0 - bridge_gap]) cube([bumper[0], bumper[0], bridge_gap + 0.01]);  // top-stop bumpers
       hull() {
-        translate([ear_x[0], pivot_pos[1] - 14, bridge_z0]) cube([ear_x[1] - ear_x[0], 22, bridge_t]);
+        translate([ear_x[0], rod_y + clamp_slot/2 + clamp_jaw_t + clamp_slot + 0.5, bridge_z0]) cube([ear_x[1] - ear_x[0], base_y1 - (rod_y + clamp_slot/2 + clamp_jaw_t + clamp_slot + 0.5), bridge_t]);
         translate([ear_x[0], pivot_pos[1], pivot_pos[2]]) rotate([0, 90, 0]) cylinder(d = 22, h = ear_x[1] - ear_x[0], $fn = 64);
       }
     }

@@ -29,3 +29,13 @@ Run:
 
 **Prints and feedback:** (what the user reported about this version)
 
+
+### bench_drill_press - 2026-11-13 20:02 (rev 66fb0a5)
+
+**Changed:** v2 (after final review): kickstand spring lever-tail -> base post (asserted torque & stretch), carriage 88 tall (sleeve pitch 64), M5x40 pin on printed spacer, rod clamp relief jaws, crush-rib knob pockets + 5 mm key holes, bridge top-stop bumpers, counterweight removed. Rods 2x232, height 236.
+
+Run:
+- [up] report: base w 140 | base d 160 | rod top 214 | rod cut length 232 | overall h 236 | pivot [56,72,156] | lever angle 28.393 | return torque / need (N·mm) [273.509,221.634] | kickstand len / free [77.539,75] | tool 775 | holder_z 45 | tip z 83.5
+
+**Prints and feedback:** (what the user reported about this version)
+

@@ -35,7 +35,7 @@ module carriage() {
     rear_hole(m5_insert[0], 0, z0 + lock_z, carriage_y1, m5_insert[1]);
     translate([0, carriage_y0 + dt_depth, z0 + lock_z]) rotate([-90, 0, 0]) tear_cyl(m5_clear, carriage_y1 - carriage_y0);
     // M5 link pin insert in the right side face
-    tear_x(m5_insert[0], carriage_x - m5_insert[1], m5_insert[1] + 1, link_pin_pos[1], link_pin_pos[2]);
+    tear_x(m5_insert[0], carriage_x - m5_insert[1] - 3, m5_insert[1] + 4, link_pin_pos[1], link_pin_pos[2]);   // +3 run-out for the M5x40 tip
   }
 }
 

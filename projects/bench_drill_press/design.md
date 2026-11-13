@@ -50,7 +50,7 @@ Anti-goals (a failure even if it "works")
 | Frame | rods act as the column + printed base, top bridge, 2-part back spine | owner chose |
 | Tool swap | vertical dovetail + one thumb screw (sets height and locks) | owner chose |
 | Plunge | lever arm on a bolt pivot | owner chose |
-| Return | extension springs on the lever near the pivot; counterweight pocket as backup | Claude's call (owner: no preference) |
+| Return | one bike kickstand spring from the lever tail down to a post on the base (5 anchor heights to tune preload) | owner chose after final review (kit springs proved too weak) |
 | Depth stop | one stop screw with a printed thumbwheel, reset for each job by touching the tip on the work; not remembered across tool swaps | owner chose |
 | Hardware | nothing beyond §6 without owner approval | owner rule |
 
@@ -69,12 +69,13 @@ Anti-goals (a failure even if it "works")
 - Rods only, no spine: the top bridge can twist under lever load.
 - Printed box column: about 3× the filament, and the stacked joints can shift.
 
-**Return**
-- *Extension springs on the lever* — **picked.** Using the owner's 200-piece
+**Return** (revised after the final review)
+- *Bike kickstand spring, lever tail to a base post* — **picked.** One stiff spring (typ. 75 mm, ~2 N/mm, ~10 N pre-tension, UNVERIFIED) holds the head up with 25 % margin; checked by an assert on torque at the top and on over-stretch.
+- *Kit extension springs near the pivot* — first pick, **rejected by review**: ~14 N·mm at the top vs ~222 N·mm needed. Using the owner's 200-piece
   kit, each spring stretches only 10–15 mm because it sits near the pivot.
 - Compression springs on the rods: none in the kit has an inside diameter of
   8.5 mm or more. Locally sold ones don't fit 8 mm rods either.
-- Counterweight only: kept as a backup pocket on the lever.
+- Counterweight only: dropped after review (a pocket that fits gives ~5 % of the needed torque).
 
 ## 5. Architecture
 
@@ -135,7 +136,7 @@ Shared geometry:
 | # | Item | Qty | Purpose | Status |
 |---|---|---|---|---|
 | H1 | Ø8 × 500 mm chrome smooth rod (Robu), cut to 2 × 250 mm | 1 | guide column | approved |
-| H2 | 200-pc spring kit (MTRoyaldia, Amazon) — use ext. 7.14×50.8 or 7.93×44.4 | 1 kit | lever return | approved |
+| H2 | Bike kickstand spring (owner has/buys; size UNVERIFIED) | 1 | lever return | approved (replaces the kit springs) |
 | H3 | M8 bolt + nyloc nut, length set by the lever boss (about 50–60 mm) | 1 | lever pivot | approved |
 | H4 | M5 screw + heat-set insert | 1 | dovetail thumb screw | approved |
 | H5 | M5 screw + nut | 1 | lever–carriage link pin | approved |
@@ -178,3 +179,12 @@ modeled as a parameter and checked against the owner's calipers:
 Print orientation per part, infill and wall counts, exact rod clamp style,
 sleeve bore test values, fillet and chamfer sizes, the dovetail angle and
 tolerance, the lever shape, and module structure in OpenSCAD.
+
+## 10. Changes after the final review (2026-11-13)
+
+- Return: kickstand spring, lever tail → base post (see Return above). Counterweight pocket removed.
+- Twist: owner kept the one-sided lever; carriage made taller (sleeve pitch 48 → 64 mm) to resist the off-centre push. Rods now 2 × 232 mm, height 236 mm.
+- Link pin: M5 × 40 tightened on a printed spacer the lever slot rides on (owner approved).
+- Rod clamps: relief cut gives each clamp a 7 mm jaw that actually flexes.
+- Knobs: crush-rib head pockets and 5 mm key holes.
+- Top stop: bumpers on the bridge underside.

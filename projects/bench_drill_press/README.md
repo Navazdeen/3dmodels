@@ -3,7 +3,7 @@
 Status: **v1 model complete and verified in software. Not printed yet.**
 Measure the parts in "Before you print" first.
 
-A compact press, about 140 × 160 mm on the bench and 220 mm tall. It has a
+A compact press, about 140 × 160 mm on the bench (plus a small spring-post outrigger at the back right) and 236 mm tall. It has a
 swappable head for:
 - **PCB drilling**: a 555 or 775 motor with chuck, 0.6–1.0 mm carbide bits
 - **Heat-set inserts**: a 60 W pen soldering iron
@@ -27,6 +27,10 @@ yours, update the value, and run `bash check.sh`.
 | Chuck Ø, length; bit stick-out | `chuck_d`, `chuck_len`, `bit_stickout` | 22, 40, 20 |
 | Iron handle Ø where it's gripped | `iron_d` (the clamp takes 18–26) | 22 |
 | Iron hot zone length, measured from the tip | `iron_hot_len` | 60 |
+| Kickstand spring: length incl. hooks, OD | `ks_L0`, `ks_od` | 75, 12 |
+| Kickstand spring rate: hang 1 kg, stretch in mm → k = 9.81 / stretch | `ks_k` | 2.0 N/mm |
+| Kickstand spring pre-tension (weight at which it just starts to open) | `ks_T0` | 10 N |
+| Head weight: carriage + motor + holder | `head_mass` | 0.55 kg |
 | Your heat-set insert hole sizes | `m3_insert`, `m5_insert` | Ø4.0, Ø6.4 |
 
 **Print `stl/Sleeve_bore_test_set.stl` first.** It has six sleeves with bores
@@ -40,13 +44,13 @@ supports are needed.
 
 | Part | Qty | Notes |
 |---|---|---|
-| Base | 1 | 4 walls, 30 % infill |
+| Base | 1 | Includes the spring post. 4 walls, 30 % infill |
 | Top bridge | 1 | Prints upside down. 4 walls, 40 % |
-| Spine | 1 | Prints flat. 4 walls, 40 % |
+| Spine | 1 | Prints flat, diagonally on the bed. 4 walls, 40 % |
 | Carriage | 1 | 5 walls, 40 % |
 | Sleeve 0–3 | 4 | 100 % infill. Use the bore from the test set |
 | Lever | 1 | Prints flat. 5 walls, 50 % |
-| Counterweight lid | 1 | |
+| Link-pin spacer | 1 | 100 % infill |
 | Depth-stop collar, thumbwheel | 1 + 1 | |
 | Holder lock knob | 1 | |
 | 775 motor holder / 555 motor holder | 1 each | Prints on its back. 5 walls, 40 % |
@@ -58,15 +62,15 @@ Approved by you on 2026-11-13, except the line marked **NEEDS OK**.
 
 | Item | Qty | Where |
 |---|---|---|
-| Ø8 mm chrome rod, 500 mm (Robu) → **cut to 2 × 216 mm** | 1 | Column. Cut length comes from `rod_len` |
+| Ø8 mm chrome rod, 500 mm (Robu) → **cut to 2 × 232 mm** | 1 | Column. Cut length comes from `rod_len` |
 | M8 × 30 bolt + nyloc nut | 1 | Lever pivot |
 | M5 × 30 + M5 insert | 1 | Holder lock (knob on the head) |
-| M5 × 35 + M5 insert | 1 | Lever–carriage link pin |
+| M5 × 40 + M5 insert | 1 | Link pin, fully tightened on the printed spacer |
 | M5 × 20 + M5 insert | 1 | Depth-stop screw (thumbwheel on the head) |
-| M3 × 20 + insert | 4 | Rod clamps (base 2, bridge 2) |
+| M3 × 12 + insert | 4 | Rod clamps (base 2, bridge 2); head bears on the thin jaw |
 | M3 × 12 + insert | 9 | Spine (4), sleeve squeeze screws (4), stop collar (1) |
 | M3 × 30 + insert | 2 | Iron clamp strap. **NEEDS OK**: brings M3 to 15, above the ~12 approved |
-| Kit extension spring 7.93 × 44.4 | 1–3 | Lever return, on the printed pegs |
+| Bike kickstand spring | 1 | Lever return: lever-tail peg → base post |
 | Motor face screws | 2 + 2 | Usually supplied with the motor |
 
 ## Assembly order
@@ -84,19 +88,25 @@ Approved by you on 2026-11-13, except the line marked **NEEDS OK**.
    Bolt the spine to the rear faces of the base and bridge (4 × M3 from
    behind).
 6. Lever: M8 bolt from the left through the ear and lever, nyloc on the right.
-   Push the M5 link pin through the lever slot into the carriage's side
-   insert. Leave it slightly loose so it can turn.
-7. Hook a spring between the middle lever peg and the bridge peg above it.
-   Add more springs or counterweight until the head comes back up by itself.
-8. Slide a tool holder into the dovetail from below. Set its height and lock
-   it with the rear knob.
+   Slide the printed spacer through the lever slot and tighten the M5 × 40
+   through it into the carriage's side insert. Tighten it fully: the lever
+   slides on the spacer, not on the screw.
+7. Hook the kickstand spring on the middle tail peg and the middle hole of the
+   base post. If the head sinks, move the bottom hook one hole lower; if it
+   slams up, one hole higher. The bumpers under the bridge are the top stop.
+8. Slide a tool holder into the dovetail **from above** (remove the bit first),
+   set its height and lock it with the rear knob.
 
 ## Known risks
 
-- **The return springs may be too weak** [Guessing; the kit's spring rate isn't
-  published]. Lifting the 775 head takes about 0.22 J, which is at the limit
-  for 2–3 kit springs. Fix: add springs (there are 3 pegs) or put weight in
-  the lever's counterweight pocket.
+- **Return spring values are typical, not measured** [Likely]. The model puts
+  the spring anchor where a 75 mm, 2 N/mm, 10 N kickstand spring holds the head
+  with 25 % margin. Measure yours (table above), set the values, and run
+  `bash check.sh`: it fails if the spring can't hold the head or would be
+  over-stretched.
+- **The carriage is pushed from one side** (your choice, to avoid a second
+  lever). The taller carriage resists the twist; if small bits still snap,
+  swap in real LM8UU bearings (same pockets).
 - **The sleeves are held only by the squeeze screws.** If they creep, a drop
   of glue on the outside fixes them in place.
 - **PLA near the iron:** the clamp grips only the handle, with ≥ 10 mm of air
@@ -107,7 +117,7 @@ Approved by you on 2026-11-13, except the line marked **NEEDS OK**.
 ## Check / regenerate
 
 ```
-bash check.sh          # all poses × all tools: 30 clash/fit checks each, plus the asserts in params.scad
+bash check.sh          # all poses × all tools: ~30 clash/fit checks each, plus the asserts in params.scad
 python3 ../../common/skills/openscad/scripts/asm.py bench_drill_press.scad --print   # print files
 python3 ../../common/tools/validate_stl.py stl/*.stl     # printability report
 ```

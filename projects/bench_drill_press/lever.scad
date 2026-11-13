@@ -5,7 +5,7 @@ module lever_outline() {
   hull() { circle(r = 11, $fn = 64); translate([-lever_r - 7, -lever_web/2]) square([1, lever_web]); }
   hull() { translate([-lever_r - 7, -lever_web/2]) square([1, lever_web]);
            translate([-lever_len, 0]) circle(r = 12, $fn = 48); }   // end supports the handle bar (r != bar radius: no coincident faces)
-  translate([8, -10]) square([32, 20]);               // tail (counterweight block)
+  translate([8, -9]) square([22, 18]);                // tail carrying the kickstand pegs
 }
 
 module lever_local() {
@@ -13,13 +13,11 @@ module lever_local() {
   difference() {
     union() {
       rotate([90, 0, 90]) linear_extrude(t) lever_outline();
-      translate([0, 8, -10]) cube([20, 32, 20]);                                  // tail widened outward (+x)
       translate([t - 0.01, -lever_len, 0]) rotate([0, 90, 0]) cylinder(d = 22, h = 60, $fn = 64);  // handle bar
-      for (d = spring_d) translate([t - 0.01, -d, 0]) rotate([0, 90, 0]) peg();
+      for (d = tail_d) translate([t - 0.01, d, 0]) rotate([0, 90, 0]) peg();   // kickstand pegs on the outer face, behind the pivot
     }
     translate([-1, 0, 0]) rotate([0, 90, 0]) cylinder(d = pivot_d, h = t + 2, $fn = 48);            // pivot bore
-    hull() for (u = [-lever_r + 2, -lever_r - 7 + 1]) translate([-1, u, 0]) rotate([0, 90, 0]) cylinder(d = m5_clear, h = t + 2, $fn = 32); // pin slot
-    translate([20 - cw_pocket[0], 8 + 4, -cw_pocket[2]/2]) cube([cw_pocket[0] + 1, cw_pocket[1], cw_pocket[2]]); // counterweight pocket, opens on the outer (+x) face
+    hull() for (u = [-lever_r + 2, -lever_r - 7 + 1]) translate([-1, u, 0]) rotate([0, 90, 0]) cylinder(d = pin_spacer_od + 0.3, h = t + 2, $fn = 32); // slot rides on the pin spacer
   }
 }
 
@@ -31,13 +29,6 @@ module peg() {   // printed spring peg along +z from its base, with a retaining 
 
 module lever() {
   translate([lever_x[0], pivot_pos[1], pivot_pos[2]]) rotate([-lever_angle(plunge), 0, 0]) lever_local();
-}
-
-module cw_lid() {   // press-fit plug + flange closing the counterweight pocket from the +x side
-  translate([lever_x[0], pivot_pos[1], pivot_pos[2]]) rotate([-lever_angle(plunge), 0, 0])
-    translate([20, 12, 0]) {
-      translate([-3, 0.15, -cw_pocket[2]/2 + 0.15]) cube([3, cw_pocket[1] - 0.3, cw_pocket[2] - 0.3]);
-      translate([0, -1.5, -cw_pocket[2]/2 - 1.5]) cube([2, cw_pocket[1] + 3, cw_pocket[2] + 3]); }
 }
 
 module collar() {
@@ -58,7 +49,21 @@ module thumbwheel() {
   zt = collar_top - collar_h - 1 - thumb_h;     // 1 mm below the collar at the default setting
   translate([stop_contact[0], stop_contact[1], zt]) difference() {
     cylinder(d = thumb_d, h = thumb_h, $fn = 24);                                  // 24 flats = grip
-    translate([0, 0, thumb_h - 5]) cylinder(d = 8.7, h = 6, $fn = 32);              // M5 socket head pocket (press fit)
-    translate([0, 0, -1]) cylinder(d = 3, h = thumb_h, $fn = 16);                  // hex-key access
+    translate([0, 0, thumb_h - 5]) head_pocket(6);                                // M5 socket head, crush-rib press fit
+    translate([0, 0, -1]) cylinder(d = knob_key_d, h = thumb_h, $fn = 24);         // 4 mm hex key passes
+  }
+}
+
+// socket-head pocket: knob_head_d bore with 6 crush ribs biting the knurled head
+module head_pocket(h) {
+  difference() { cylinder(d = knob_head_d + 0.6, h = h, $fn = 48);
+    for (a = [0:60:300]) rotate(a) translate([knob_head_d/2, -0.4, -1]) cube([1, 0.8, h + 2]); }
+}
+
+module pin_spacer() {   // the lever slot rides on this; the M5x40 clamps it to the carriage
+  translate(link_pin_pos) rotate([0, 90, 0]) difference() {
+    union() { cylinder(d = pin_spacer_od, h = lever_x[1] + 0.2 - carriage_x, $fn = 32);
+      translate([0, 0, lever_x[1] + 0.2 - carriage_x]) cylinder(d = pin_flange[0], h = pin_flange[1], $fn = 32); }
+    translate([0, 0, -1]) cylinder(d = m5_clear, h = 50, $fn = 24);
   }
 }

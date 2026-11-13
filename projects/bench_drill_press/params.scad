@@ -41,7 +41,7 @@ edge_ch = 1;                            // edge chamfer
 rod_len_max = 250;                      // half of one 500 mm rod
 
 // --- carriage (positions needed by the frame) ---
-carriage_h = 72;                        // carriage height (sleeve pitch 48)
+carriage_h = 88;                        // carriage height (sleeve pitch 64: resists the off-centre lever push)
 carriage_z0_up = 100;                   // carriage bottom at plunge 0 (set by tool drop, Task 5)
 carriage_z0 = carriage_z0_up - plunge;  // carriage bottom at this pose
 carriage_x = rod_pitch/2 + 15/2 + 3.5;  // carriage half-width (rod + sleeve + wall) = 46
@@ -58,13 +58,13 @@ rod_pass = rod_d + 2;                   // rod clearance between sleeves
 carriage_y0 = 30;                       // carriage front face (dovetail mouth)
 carriage_y1 = rod_y + 10;               // carriage rear face
 cear_x = carriage_x + 7;                // clamp-ear outer x (53)
-cear_y = [38, 60];                      // clamp-ear y range
-squeeze_x = rod_pitch/2 + sleeve_od/2 + 4.5; // squeeze screw |x| (47)
+cear_y = [39.5, 60];                    // clamp-ear y range
+squeeze_x = rod_pitch/2 + sleeve_od/2 + 6;   // squeeze screw |x| (48.5): insert path clear of the body
 dt_mouth = 24;                          // dovetail width at carriage front face
 dt_depth = 6;                           // dovetail depth
 dt_angle = 60;                          // dovetail flank angle to the face
 dt_clear = 0.2;                         // per-side clearance, socket vs key
-lock_z = carriage_h / 2;                // M5 lock screw height on carriage
+lock_z = 38;                            // M5 lock screw height on carriage (key covers it over the whole holder range)
 
 // --- top bridge ---
 bridge_gap = 8;                         // carriage top (up) to bridge underside
@@ -99,20 +99,10 @@ stop_contact = [-50, 42, carriage_z0];  // carriage underside point the depth st
 lever_len = 150;                        // pivot to handle grip centre
 lever_ratio = lever_len / lever_r;      // force multiplication at the pin
 lever_web = 16;                         // arm depth (in the lever plane) near the pin
-spring_d = [12, 15, 18];                // spring anchor radii on the lever (forward of pivot)
-spring_default = 1;                     // index of the hole used for the stretch check
-spring_free = 44.4;                     // kit spring free length (incl. hooks)
-spring_tab_z = min(bridge_top - 5, pivot_pos[2] + spring_d[1] * sin(lever_angle(0)) + spring_free + 1);  // ~1 mm preload at the top
-peg_d = 6; peg_len = 9;                 // printed spring pegs (no hardware)
-spring_x = lever_x[1] + peg_len/2;      // plane the springs hang in
-spring_wire_od = 7.93;                  // kit extension spring 7.93 x 44.4 (OD x length)
-cw_pocket = [14, 24, 14];               // counterweight pocket (x, along lever, depth)
+peg_d = 6; peg_len = 9;                 // printed spring pegs
+
 function lever_angle(p) = atan2(pin_dz + carriage_z0_up - p - pivot_pos[2], lever_r);  // + = handle up
 function lever_pt(d, p) = [pivot_pos[1] - d * cos(lever_angle(p)), pivot_pos[2] + d * sin(lever_angle(p))]; // [y,z] at radius d forward
-function spring_len(d, p) = spring_tab_z - lever_pt(d, p)[1];   // tab is directly above the anchor at mid
-function spring_stretch(d) = spring_len(d, travel_len) - spring_len(d, 0);
-assert(spring_stretch(spring_d[spring_default]) <= 15, str("spring stretch ", spring_stretch(spring_d[spring_default])));
-assert(spring_stretch(spring_d[2]) <= 18, "spring stretch, outer hole");
 assert(abs(lever_ratio - 4) <= 0.5, "lever ratio");
 assert(lever_angle(0) - lever_angle(travel_len) <= 75, "lever swing");
 
@@ -172,3 +162,45 @@ base_y0 = -88;                          // front edge y
 base_y1 = base_y0 + base_d;             // rear edge y (= 72)
 clamp_screw_dx = 10;                    // clamp screw offset outboard of rod axis
 clamp_cb = [6.0, 8];                    // M3 counterbore dia, depth from rear face
+clamp_jaw_t = 7;                        // rod-clamp jaw thickness behind the slot (relief cut makes it flex)
+
+// --- knobs, link pin ---
+knob_head_d = 8.3;                      // M5 socket head (8.5) pocket: 0.2 interference + crush ribs
+knob_key_d = 5;                         // 4 mm hex key passes (4.6 across corners)
+pin_spacer_od = 8;                      // printed spacer the lever slot rides on
+pin_flange = [12, 2];                   // spacer flange dia, thickness (under the screw head)
+pin_screw_len = 40;                     // M5 x 40
+bumper = [8, 8];                        // top-stop bumpers on the bridge underside (size, height = bridge_gap)
+
+// ===== review fixes (final review, 2026-11-13): each assert must fail before its fix =====
+head_mass = 0.55;                       // UNVERIFIED carriage + 775 + holder, kg
+lever_moment = 22;                      // lever's own forward moment about the pivot, N·mm (estimate)
+head_torque = head_mass * 9.81 * lever_r + lever_moment;   // N·mm the return spring must beat at the top
+
+// --- return spring: bike kickstand spring from the lever tail down to a post on the base ---
+ks_L0 = 75;             // UNVERIFIED free length incl. hooks, mm
+ks_k = 2.0;             // UNVERIFIED rate, N/mm  (measure: hang 1 kg, read the stretch)
+ks_T0 = 10;             // UNVERIFIED initial tension, N
+ks_od = 12;             // UNVERIFIED outside diameter
+ks_max_ext = 0.5;       // UNVERIFIED max safe extension, fraction of L0
+tail_d = [18, 21, 24];  // spring pegs on the lever tail, mm behind the pivot
+tail_default = 1;
+ks_x = lever_x[1] + peg_len/2;          // spring plane (pegs on the lever's outer face, up when printed)
+function tail_pt(d, p) = [pivot_pos[1] + d * cos(lever_angle(p)), pivot_pos[2] - d * sin(lever_angle(p))];  // [y,z]
+ks_y = pivot_pos[1] + tail_d[tail_default];                // anchor post y (under the tail peg at mid stroke)
+ks_need = 1.25 * head_torque / (tail_d[tail_default] * cos(lever_angle(0)));   // N at the top, 25 % margin
+ks_x_top = max(0.5, (ks_need - ks_T0) / ks_k);              // preload stretch at the top
+ks_anchor_z = tail_pt(tail_default == 1 ? tail_d[1] : tail_d[1], 0)[1] - (ks_L0 + ks_x_top);  // default anchor hole
+ks_tune = [-10, -5, 0, 5, 10];                               // extra anchor holes for tuning (lower = more preload)
+function ks_len(p) = norm(tail_pt(tail_d[tail_default], p) - [ks_y, ks_anchor_z]);
+function ks_force(p) = ks_len(p) >= ks_L0 ? ks_T0 + ks_k * (ks_len(p) - ks_L0) : 0;
+function ret_torque(p) = let(t = tail_pt(tail_d[tail_default], p), r = t - [pivot_pos[1], pivot_pos[2]],
+    u = ([ks_y, ks_anchor_z] - t) / norm([ks_y, ks_anchor_z] - t), f = u * ks_force(p)) -(r[0] * f[1] - r[1] * f[0]);
+function ret_torque_top() = ret_torque(0);
+assert(ks_len(travel_len) - ks_L0 <= ks_max_ext * ks_L0, str("kickstand spring over-stretched: ", ks_len(travel_len) - ks_L0));
+assert(ret_torque_top() >= 1.2 * head_torque, str("return torque at top ", ret_torque_top(), " < 1.2 x ", head_torque));
+assert(sleeve_pitch >= 64, str("sleeve pitch ", sleeve_pitch, " — carriage twists under the off-centre lever push"));
+assert(squeeze_x >= 48.5, "squeeze-screw insert path clips the carriage body");
+assert(clamp_jaw_t <= 8, "rod clamp jaw too stiff to grip");
+assert(knob_key_d >= 4.7 && knob_head_d < 8.5, "knob/thumbwheel can't transmit torque to the M5 socket head");
+assert(pin_screw_len == 40, "link pin must be M5x40 tightened on a spacer");
