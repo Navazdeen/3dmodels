@@ -32,9 +32,9 @@ module rear_hole(d, x, z, rear_y, dep, flip = false) {
 
 // split clamp for one rod at x=rx: slot in plane y=rod_y from rod to the outer side edge,
 // M3 screw along y from the rear face across the slot into an insert in front.
-module rod_clamp_cut(rx, z0, h, rear_y, flip = false) {
+module rod_clamp_cut(rx, z0, h, rear_y, flip = false, half_w = 200) {
   s = sign(rx);
-  edge = s > 0 ? 200 : -200;
+  edge = s * (half_w + 1);  // slot ends just past the part's own side face
   translate([min(rx, edge), rod_y - clamp_slot/2, z0 - 1]) cube([abs(edge - rx), clamp_slot, h + 2]);
   sx = rx + s * (rod_d/2 + clamp_screw_dx - rod_d/2 + 2);  // outboard of the rod
   translate([sx, 0, z0 + h/2]) rotate([-90, 0, 0]) {
@@ -50,7 +50,7 @@ module base() {
     for (x = rod_x) {
       translate([x, rod_y, -rod_socket_depth]) cylinder(d = rod_bore, h = rod_socket_depth + 1, $fn=64);
       translate([x, rod_y, -0.6]) cylinder(d1 = rod_bore, d2 = rod_bore + 1.2, h = 0.61, $fn=64);  // lead-in
-      rod_clamp_cut(x, -base_t, base_t, base_y1);
+      rod_clamp_cut(x, -base_t, base_t, base_y1, half_w = base_w/2);
     }
     translate([-pad[0]/2, -pad[1]/2, -pad[2]]) cube([pad[0], pad[1], pad[2] + 1]);          // work pad
     for (x = spine_screw_x) rear_hole(m3_insert[0], x, -spine_screw_dz, base_y1, m3_insert[1] + 1);
@@ -65,7 +65,11 @@ module top_bridge() {
     union() {
       slab(-bridge_w/2, bridge_w/2, bridge_y0, base_y1, bridge_z0, bridge_t);
       // pivot ear, hanging down on the right side
-      translate([bridge_w/2 - 6, pivot_pos[1] - 14, bridge_z0]) cube([ear_x[1] - bridge_w/2 + 6, 22, bridge_t]);  // joins ear to bridge
+      translate([bridge_w/2 - 6, rod_y + 2, bridge_z0]) cube([ear_x[1] - bridge_w/2 + 6, base_y1 - rod_y - 2, bridge_t]);  // joins ear & tab to bridge, behind the clamp slot
+      // spring tab over the lever plane, with printed pegs pointing +x
+      // starts outboard of the clamp slot end so it doesn't tie the front clamp jaw
+      translate([bridge_w/2 + 1.5, pivot_pos[1] - spring_d[2] - 6, bridge_top - 14]) cube([lever_x[1] - bridge_w/2 - 1.5, base_y1 - (pivot_pos[1] - spring_d[2] - 6), 14]);
+      for (d = spring_d) translate([lever_x[1] - 0.01, pivot_pos[1] - d, spring_tab_z]) rotate([0, 90, 0]) peg();
       hull() {
         translate([ear_x[0], pivot_pos[1] - 14, bridge_z0]) cube([ear_x[1] - ear_x[0], 22, bridge_t]);
         translate([ear_x[0], pivot_pos[1], pivot_pos[2]]) rotate([0, 90, 0]) cylinder(d = 22, h = ear_x[1] - ear_x[0], $fn = 64);
@@ -74,7 +78,7 @@ module top_bridge() {
     for (x = rod_x) {
       translate([x, rod_y, bridge_z0 - 1]) cylinder(d = rod_bore, h = rod_socket_depth + 1, $fn = 64);
       translate([x, rod_y, bridge_z0 - 0.01]) cylinder(d1 = rod_bore + 1.2, d2 = rod_bore, h = 0.61, $fn = 64);
-      rod_clamp_cut(x, bridge_z0, bridge_t, base_y1, flip = true);
+      rod_clamp_cut(x, bridge_z0, bridge_t, base_y1, flip = true, half_w = bridge_w/2);
     }
     tear_x(pivot_d, ear_x[0] - 1, ear_x[1] - ear_x[0] + 2, pivot_pos[1], pivot_pos[2], flip = true);
     for (x = spine_screw_x) rear_hole(m3_insert[0], x, bridge_top - spine_screw_dz, base_y1, m3_insert[1] + 1, flip = true);

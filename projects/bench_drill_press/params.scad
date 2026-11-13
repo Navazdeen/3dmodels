@@ -73,7 +73,7 @@ bridge_y0 = rod_y - 12;                 // bridge front edge
 // --- lever pivot (ear on bridge, right side) ---
 lever_r = 40;                           // pin radius from pivot (slot horizontal at mid plunge)
 ear_x = [carriage_x + 10, carriage_x + 20];   // pivot ear x range (clear of carriage clamp ears)
-lever_x = [ear_x[1] + 0.5, ear_x[1] + 8.5]; // lever plate x range
+lever_x = [ear_x[1] + 1.5, ear_x[1] + 9.5]; // lever plate x range
 pivot_d = fit_mid("H9", 8);             // M8 pivot bore
 
 // --- spine (behind base & bridge rear faces) ---
@@ -92,7 +92,37 @@ pivot_pos = [ear_x[0], pin_y + lever_r, carriage_z0_up - travel_len/2 + pin_dz];
 overall_h = bridge_top + base_t;
 dovetail_origin = [0, carriage_y0, carriage_z0];          // socket mouth centre, carriage bottom
 link_pin_pos = [carriage_x, pin_y, carriage_z0 + pin_dz];  // pin axis along +x from carriage side
-stop_contact = [-(squeeze_x), cear_y[0] + 6, carriage_z0];// carriage underside point the depth stop hits
+stop_contact = [-50, 42, carriage_z0];  // carriage underside point the depth stop hits (under left clamp ear)
+// --- lever (Task 4) ---
+lever_len = 160;                        // pivot to handle grip centre
+lever_ratio = lever_len / lever_r;      // force multiplication at the pin
+lever_web = 16;                         // arm depth (in the lever plane) near the pin
+spring_d = [12, 16, 20];                // spring anchor radii on the lever (forward of pivot)
+spring_default = 1;                     // index of the hole used for the stretch check
+spring_free = 44.4;                     // kit spring free length (incl. hooks)
+spring_tab_z = min(bridge_top - 5, pivot_pos[2] + spring_d[1] * sin(lever_angle(0)) + spring_free + 1);  // ~1 mm preload at the top
+peg_d = 6; peg_len = 9;                 // printed spring pegs (no hardware)
+spring_x = lever_x[1] + peg_len/2;      // plane the springs hang in
+spring_wire_od = 7.93;                  // kit extension spring 7.93 x 44.4 (OD x length)
+cw_pocket = [14, 24, 14];               // counterweight pocket (x, along lever, depth)
+function lever_angle(p) = atan2(pin_dz + carriage_z0_up - p - pivot_pos[2], lever_r);  // + = handle up
+function lever_pt(d, p) = [pivot_pos[1] - d * cos(lever_angle(p)), pivot_pos[2] + d * sin(lever_angle(p))]; // [y,z] at radius d forward
+function spring_len(d, p) = spring_tab_z - lever_pt(d, p)[1];   // tab is directly above the anchor at mid
+function spring_stretch(d) = spring_len(d, travel_len) - spring_len(d, 0);
+assert(spring_stretch(spring_d[spring_default]) <= 15, str("spring stretch ", spring_stretch(spring_d[spring_default])));
+assert(spring_stretch(spring_d[2]) <= 18, "spring stretch, outer hole");
+assert(abs(lever_ratio - 4) <= 0.5, "lever ratio");
+assert(lever_angle(0) - lever_angle(travel_len) <= 75, "lever swing");
+
+// --- depth stop collar on the left rod (Task 4) ---
+collar_h = 14;                          // collar height
+collar_od = 24;                         // collar ring OD
+stop_screw_len = 20;                    // M5 x 20 stop screw
+stop_protrude = 6;                      // screw tip above collar top at the default setting
+collar_top = carriage_z0_up - travel_len - stop_protrude;  // so the tip touches the carriage at full plunge
+thumb_d = 18;                           // thumbwheel diameter (clears the rod)
+thumb_h = 7;                            // thumbwheel thickness (2 mm floor under the head)
+
 assert(sleeve_pitch >= 46, "sleeve pitch");
 assert(rod_len <= rod_len_max, str("rod_len ", rod_len, " > ", rod_len_max));
 assert(overall_h <= h_max, str("overall_h ", overall_h));
