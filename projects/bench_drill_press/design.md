@@ -154,7 +154,7 @@ owner already uses. See §8.
   `3d-print-designer`: PLA rules, print orientation, design review).
 - Every part goes through `common/tools/validate_stl.py`: watertight, sits flat
   on the bed, walls ≥ 1.2 mm, overhangs ≤ 45°, bridges < 20 mm.
-- Assembly check: no clashes across the full 40 mm plunge, 80 mm daylight
+- Assembly check: no clashes across the full 40 mm plunge, 40 mm daylight
   confirmed, and the lever doesn't hit the frame.
 - Every part fits within 220 × 220 × 250 mm in its print orientation.
 - Height check: with the holder at its lowest setting and full plunge, the tip
