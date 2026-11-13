@@ -5,6 +5,6 @@ cd "$(dirname "$0")"
 S=../../common/skills/openscad/scripts
 out=$(python3 $S/asm.py bench_drill_press.scad --check --clash --brief "$@" 2>&1)
 echo "$out"
-if echo "$out" | grep -qE "CHECK (FAIL|\?)|[1-9][0-9]* FAIL|ERROR|NOT WATERTIGHT|NON-MANIFOLD|EMPTY|[1-9][0-9]* overlapping|Assertion"; then
+if echo "$out" | grep -qE "CHECK (FAIL|\?)|[1-9][0-9]* FAIL|ERROR|NOT WATERTIGHT|NON-MANIFOLD|EMPTY|[1-9][0-9]* overlapping|Assertion|PIECES"; then
   echo "check.sh: FAIL"; exit 1; fi
 echo "check.sh: PASS"

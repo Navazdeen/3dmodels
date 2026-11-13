@@ -4,10 +4,11 @@
 // Accepted validator WARN: the 1 mm bottom chamfer at rounded corners reads as ~23 mm2 overhang
 // at z=0 above the bed (first 1 mm only; prints fine, acts as elephant-foot relief).
 module slab(x0, x1, y0, y1, z0, h, r=corner_r, c=edge_ch) {
-  hull() for (k = [[c, 0], [0, c], [h - c, 0], [h, c]]) if (k[0] <= h)
-    translate([0, 0, z0 + min(k[0], h) - (k[0]==h||k[0]==h-c ? 0.01 : 0)])
-      linear_extrude(0.01) offset(r = r - k[1]) offset(delta = -r)
-        translate([x0, y0]) square([x1 - x0, y1 - y0]);
+  module rr(o) offset(r = r + o) offset(delta = -r) translate([x0, y0]) square([x1 - x0, y1 - y0]);
+  hull() {
+    translate([0, 0, z0]) linear_extrude(h) rr(-c);
+    translate([0, 0, z0 + c]) linear_extrude(h - 2*c) rr(0);
+  }
 }
 
 // horizontal hole printable without support: teardrop with its point toward world +z
@@ -64,6 +65,7 @@ module top_bridge() {
     union() {
       slab(-bridge_w/2, bridge_w/2, bridge_y0, base_y1, bridge_z0, bridge_t);
       // pivot ear, hanging down on the right side
+      translate([bridge_w/2 - 6, pivot_pos[1] - 14, bridge_z0]) cube([ear_x[1] - bridge_w/2 + 6, 22, bridge_t]);  // joins ear to bridge
       hull() {
         translate([ear_x[0], pivot_pos[1] - 14, bridge_z0]) cube([ear_x[1] - ear_x[0], 22, bridge_t]);
         translate([ear_x[0], pivot_pos[1], pivot_pos[2]]) rotate([0, 90, 0]) cylinder(d = 22, h = ear_x[1] - ear_x[0], $fn = 64);

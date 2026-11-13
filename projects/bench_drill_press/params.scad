@@ -46,6 +46,24 @@ carriage_x = rod_pitch/2 + 15/2 + 3.5;  // carriage half-width (rod + sleeve + w
 pin_y = 32;                             // lever link pin y on carriage side
 pin_dz = carriage_h - 12;               // link pin height above carriage bottom
 
+// --- carriage detail ---
+sleeve_od = 15;                         // LM8UU envelope OD
+sleeve_len = 24;                        // LM8UU length
+sleeve_bore = 8.1;                      // printed sleeve bore; set from sleeve_test print
+sleeve_pocket = fit_mid("H7", sleeve_od);
+sleeve_pitch = carriage_h - sleeve_len; // centre distance of the 2 sleeves on one rod
+rod_pass = rod_d + 2;                   // rod clearance between sleeves
+carriage_y0 = 26;                       // carriage front face (dovetail mouth)
+carriage_y1 = rod_y + 10;               // carriage rear face
+cear_x = carriage_x + 7;                // clamp-ear outer x (53)
+cear_y = [38, 60];                      // clamp-ear y range
+squeeze_x = rod_pitch/2 + sleeve_od/2 + 4.5; // squeeze screw |x| (47)
+dt_mouth = 24;                          // dovetail width at carriage front face
+dt_depth = 6;                           // dovetail depth
+dt_angle = 60;                          // dovetail flank angle to the face
+dt_clear = 0.2;                         // per-side clearance, socket vs key
+lock_z = carriage_h / 2;                // M5 lock screw height on carriage
+
 // --- top bridge ---
 bridge_gap = 8;                         // carriage top (up) to bridge underside
 bridge_t = 20;                          // bridge thickness
@@ -54,7 +72,7 @@ bridge_y0 = rod_y - 12;                 // bridge front edge
 
 // --- lever pivot (ear on bridge, right side) ---
 lever_r = 40;                           // pin radius from pivot (slot horizontal at mid plunge)
-ear_x = [carriage_x + 2, carriage_x + 12];   // pivot ear x range
+ear_x = [carriage_x + 10, carriage_x + 20];   // pivot ear x range (clear of carriage clamp ears)
 lever_x = [ear_x[1] + 0.5, ear_x[1] + 8.5]; // lever plate x range
 pivot_d = fit_mid("H9", 8);             // M8 pivot bore
 
@@ -72,6 +90,10 @@ rod_top_z = bridge_z0 + rod_socket_depth;        // rod top (blind socket in bri
 rod_len = rod_top_z + rod_socket_depth;          // cut length
 pivot_pos = [ear_x[0], pin_y + lever_r, carriage_z0_up - travel_len/2 + pin_dz];  // axis along +x
 overall_h = bridge_top + base_t;
+dovetail_origin = [0, carriage_y0, carriage_z0];          // socket mouth centre, carriage bottom
+link_pin_pos = [carriage_x, pin_y, carriage_z0 + pin_dz];  // pin axis along +x from carriage side
+stop_contact = [-(squeeze_x), cear_y[0] + 6, carriage_z0];// carriage underside point the depth stop hits
+assert(sleeve_pitch >= 46, "sleeve pitch");
 assert(rod_len <= rod_len_max, str("rod_len ", rod_len, " > ", rod_len_max));
 assert(overall_h <= h_max, str("overall_h ", overall_h));
 assert(clamp_slot >= 1);
