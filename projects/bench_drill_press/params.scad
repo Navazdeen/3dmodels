@@ -3,9 +3,11 @@
 include <fits.scad>
 
 // --- pose (variant) ---
-variant = "up";                         // up | mid | down
-variants = ["up","mid","down"];
-plunge = variant=="up" ? 0 : variant=="mid" ? 20 : 40;   // carriage drop from top, mm
+variant = "up";                         // pose[_tool]: up | mid | down, tool 775 (default) | 555 | iron
+variants = ["up","mid","down","up_555","down_555","up_iron","down_iron"];
+pose = search("_", variant) == [] ? variant : chr([for (i = [0:search("_", variant)[0]-1]) ord(variant[i])]);
+tool = search("_", variant) == [] ? "775" : chr([for (i = [search("_", variant)[0]+1:len(variant)-1]) ord(variant[i])]);
+plunge = pose=="up" ? 0 : pose=="mid" ? 20 : 40;   // carriage drop from top, mm
 
 // --- envelope ---
 bed = [220,220,250];                    // Kobra 2 Neo build volume
@@ -43,7 +45,7 @@ carriage_h = 72;                        // carriage height (sleeve pitch 48)
 carriage_z0_up = 100;                   // carriage bottom at plunge 0 (set by tool drop, Task 5)
 carriage_z0 = carriage_z0_up - plunge;  // carriage bottom at this pose
 carriage_x = rod_pitch/2 + 15/2 + 3.5;  // carriage half-width (rod + sleeve + wall) = 46
-pin_y = 32;                             // lever link pin y on carriage side
+pin_y = 35;                             // lever link pin y on carriage side (carriage_y0 + 5)
 pin_dz = carriage_h - 12;               // link pin height above carriage bottom
 
 // --- carriage detail ---
@@ -53,7 +55,7 @@ sleeve_bore = 8.1;                      // printed sleeve bore; set from sleeve_
 sleeve_pocket = fit_mid("H7", sleeve_od);
 sleeve_pitch = carriage_h - sleeve_len; // centre distance of the 2 sleeves on one rod
 rod_pass = rod_d + 2;                   // rod clearance between sleeves
-carriage_y0 = 26;                       // carriage front face (dovetail mouth)
+carriage_y0 = 30;                       // carriage front face (dovetail mouth)
 carriage_y1 = rod_y + 10;               // carriage rear face
 cear_x = carriage_x + 7;                // clamp-ear outer x (53)
 cear_y = [38, 60];                      // clamp-ear y range
@@ -71,7 +73,7 @@ bridge_w = 110;                         // bridge width (x)
 bridge_y0 = rod_y - 12;                 // bridge front edge
 
 // --- lever pivot (ear on bridge, right side) ---
-lever_r = 40;                           // pin radius from pivot (slot horizontal at mid plunge)
+lever_r = 37;                           // pin radius from pivot (slot horizontal at mid plunge)
 ear_x = [carriage_x + 10, carriage_x + 20];   // pivot ear x range (clear of carriage clamp ears)
 lever_x = [ear_x[1] + 1.5, ear_x[1] + 9.5]; // lever plate x range
 pivot_d = fit_mid("H9", 8);             // M8 pivot bore
@@ -94,10 +96,10 @@ dovetail_origin = [0, carriage_y0, carriage_z0];          // socket mouth centre
 link_pin_pos = [carriage_x, pin_y, carriage_z0 + pin_dz];  // pin axis along +x from carriage side
 stop_contact = [-50, 42, carriage_z0];  // carriage underside point the depth stop hits (under left clamp ear)
 // --- lever (Task 4) ---
-lever_len = 160;                        // pivot to handle grip centre
+lever_len = 150;                        // pivot to handle grip centre
 lever_ratio = lever_len / lever_r;      // force multiplication at the pin
 lever_web = 16;                         // arm depth (in the lever plane) near the pin
-spring_d = [12, 16, 20];                // spring anchor radii on the lever (forward of pivot)
+spring_d = [12, 15, 18];                // spring anchor radii on the lever (forward of pivot)
 spring_default = 1;                     // index of the hole used for the stretch check
 spring_free = 44.4;                     // kit spring free length (incl. hooks)
 spring_tab_z = min(bridge_top - 5, pivot_pos[2] + spring_d[1] * sin(lever_angle(0)) + spring_free + 1);  // ~1 mm preload at the top
@@ -122,6 +124,43 @@ stop_protrude = 6;                      // screw tip above collar top at the def
 collar_top = carriage_z0_up - travel_len - stop_protrude;  // so the tip touches the carriage at full plunge
 thumb_d = 18;                           // thumbwheel diameter (clears the rod)
 thumb_h = 7;                            // thumbwheel thickness (2 mm floor under the head)
+
+// --- tool holders (Task 5). Motor & iron sizes UNVERIFIED: typical values until the owner measures ---
+m775_d = 42;            // UNVERIFIED 775 body diameter
+m775_len = 67;          // UNVERIFIED 775 body length
+m775_screw = [4.5, 29]; // UNVERIFIED face screws: M4 clearance, spacing
+m775_boss = [17.5, 4.5];// UNVERIFIED front bearing boss dia, height
+m555_d = 35.8;          // UNVERIFIED 555 body diameter
+m555_len = 57;          // UNVERIFIED 555 body length
+m555_screw = [3.4, 25]; // UNVERIFIED face screws: M3 clearance, spacing
+m555_boss = [13, 3];    // UNVERIFIED front boss dia, height
+chuck_d = 22;           // UNVERIFIED chuck diameter
+chuck_len = 40;         // UNVERIFIED chuck length
+bit_stickout = 20;      // bit length out of the chuck
+shaft_gap = 8;          // motor face to chuck
+tool_below = shaft_gap + chuck_len + bit_stickout;   // motor face to bit tip
+iron_grip_d = [18, 26]; // clamp range for the pen-iron handle
+iron_d = 22;            // UNVERIFIED iron handle diameter (nominal, for the model)
+iron_grip_len = 40;     // UNVERIFIED usable grip length
+iron_hot_len = 60;      // UNVERIFIED hot zone measured from the tip
+iron_barrel_d = 8;      // UNVERIFIED barrel diameter
+iron_air_gap = 10;      // min air between any PLA part and the hot zone
+holder_key_len = 60;    // dovetail key length
+holder_key_drop = 14;   // key bottom below carriage bottom at holder_z = 0
+holder_z_max = 45;      // holder slide range
+holder_z = pose == "up" ? holder_z_max : pose == "mid" ? holder_z_max/2 : 0;
+tip_low = -1.5;         // tip z at full plunge, holder lowest (inside the work-pad pocket)
+holder_wall = 3;        // cradle wall
+holder_floor = 5;       // motor floor plate
+function key_bottom(hz, p) = carriage_z0_up - p - holder_key_drop + hz;
+function f_off(below) = below + tip_low - key_bottom(0, travel_len);  // tool datum above key bottom
+tool_datum_below = tool == "iron" ? iron_hot_len + iron_air_gap : tool_below;  // datum (motor face / clamp bottom) to tip
+function tip_z(hz, p) = key_bottom(hz, p) + f_off(tool_datum_below) - tool_datum_below;
+key_back_y = carriage_y0 + dt_depth - dt_clear;   // key back face (lock screw tip)
+assert(holder_z_max >= 45, "holder range");
+assert(tip_z(holder_z_max, 0) >= clear_min, str("clearance ", tip_z(holder_z_max, 0)));
+assert(tip_z(0, travel_len) <= 0 && tip_z(0, travel_len) >= -pad[2], "reach");
+assert(key_bottom(0, 0) + holder_key_len >= carriage_z0_up + lock_z + 5 && key_bottom(holder_z_max, 0) <= carriage_z0_up + lock_z - 5, "lock screw always on the key");
 
 assert(sleeve_pitch >= 46, "sleeve pitch");
 assert(rod_len <= rod_len_max, str("rod_len ", rod_len, " > ", rod_len_max));
