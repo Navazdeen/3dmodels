@@ -1,0 +1,4 @@
+model bench_drill_press.scad
+rev 5df594d
+made 2026-11-13 19:17
+Base.stl
