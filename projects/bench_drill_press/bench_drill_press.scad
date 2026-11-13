@@ -61,7 +61,7 @@ checks = concat([
   : [[str("holder_", tool),"carriage","<=",0.4], ["hw_lock_screw",str("holder_", tool),"touch"],
      ["hw_chuck_bit","base",">=",0], [str("holder_", tool),"base",">=",1], [str("holder_", tool),"lever",">=",1]],
   pose == "down" ? [["hw_stop_screw","carriage","touch"]] : [["hw_stop_screw","carriage",">=",19]]);
-report = [ ["base w", base_w], ["base d", base_d], ["rod top", rod_top_z], ["rod cut length", rod_len], ["overall h", overall_h], ["pivot", pivot_pos], ["lever angle", lever_angle(plunge)], ["spring stretch d12/16/20", [for (d = spring_d) spring_stretch(d)]], ["spring len now", spring_len(spring_d[spring_default], plunge)], ["tool", tool], ["holder_z", holder_z], ["tip z", tip_z(holder_z, plunge)] ];
+report = [ ["base w", base_w], ["base d", base_d], ["rod top", rod_top_z], ["rod cut length", rod_len], ["overall h", overall_h], ["pivot", pivot_pos], ["lever angle", lever_angle(plunge)], [str("spring stretch d", spring_d), [for (d = spring_d) spring_stretch(d)]], ["spring len now", spring_len(spring_d[spring_default], plunge)], ["tool", tool], ["holder_z", holder_z], ["tip z", tip_z(holder_z, plunge)] ];
 module pick(n){ if(part=="all"||part==n) children(); }
 pick("base") base();
 pick("top_bridge") top_bridge();
