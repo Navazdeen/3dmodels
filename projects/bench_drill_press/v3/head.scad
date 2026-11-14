@@ -55,7 +55,7 @@ module head() {
 module gib(x, g, _unused, k) {
   z0 = head_z0; zc = z0 + seat_z[k];
   blade = [rod_y + g * (rod_d/2 + 2 - gib_gap), rod_y + g * (rod_d/2 + 2 - gib_gap + gib_t)];    // y faces of the blade
-  bump  = [rod_y + g * (rod_d/2 - gib_gap), blade[0]];
+  bump  = [rod_y + g * (rod_d/2 - gib_gap), blade[0] + g * 0.01];   // 0.01 into the blade: never face-to-face
   zr = k == 0 ? [z0, z0 + seat_z[0] + gib_L] : [zc - gib_L, z0 + head_h];   // bottom gib stands on the bed, top gib grows from its root
   root = k == 0 ? [zr[1] - 5, zr[1]] : [zr[0], zr[0] + 5];
   translate([x - gib_b/2, min(blade), zr[0]]) cube([gib_b, gib_t, zr[1] - zr[0]]);

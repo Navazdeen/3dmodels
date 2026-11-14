@@ -124,7 +124,7 @@ function ks_force(p) = ks_T0 + ks_k * ks_ext(p);
 function ret_torque(p) = ks_force(p) * spr_r;                     // N·mm lifting the head (+)
 function gear_stress(F, m, b) = F / (b * m * 0.3);                // Lewis, Y ≈ 0.3
 rack_len = rack_teeth * PI * pin_m;
-n_printed = 10; n_screws = 8;                                     // design_v3 §2 budget
+n_printed = 9; n_screws = 8;                                      // frame, head, shaft, pinion, slider, handle, stop ring, 555 + iron sleeves; M5 ring, 2 rod grubs, 4 gib adjusters, stop clamp
 assert(ret_torque(0) >= 1.25 * (head_mass * 9.81 + friction) * pin_r - 0.01, str("return torque ", ret_torque(0)));
 assert(ret_torque(0) > 0 && ret_torque(travel_len) > 0, "spring must lift the head at both ends");
 assert(ks_ext(travel_len) <= ks_max_ext * ks_L0, str("kickstand over-stretched: ", ks_ext(travel_len)));

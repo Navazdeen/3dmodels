@@ -9,7 +9,7 @@ common/                  shared by every project
   tools/validate_stl.py  printability checker (walls, overhangs, bridges, bed contact)
 projects/
   kobra2neo_nozzle_cam/  nozzle camera mount for Anycubic Kobra 2 Neo
-  bench_drill_press/     3D-printed bench drill press (PCB drilling + heat-set inserts)
+  bench_drill_press/     3D-printed bench drill press (PCB drilling + heat-set inserts); current model in v3/
 ```
 
 Each project folder holds its `.scad` source, exported `stl/`, previews and
