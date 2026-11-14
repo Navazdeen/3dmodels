@@ -27,7 +27,7 @@ rod_socket = 12;                        // blind socket depth in the base
 
 // --- head & feed geometry ---
 head_h = 70;                            // head height
-head_z0_up = 110;                       // head bottom (= 43 mm ring bottom) at plunge 0
+head_z0_up = 118;                       // head bottom (= 43 mm ring bottom) at plunge 0; the iron needs 75 mm ring-to-tip
 head_z0 = head_z0_up - plunge;
 pin_m = 1.5; pin_t = 14;                // main pinion module, teeth
 pin_r = pin_m * pin_t / 2;              // 10.5 pitch radius
@@ -37,7 +37,7 @@ pinion_axis = [rack_pitch_y + pin_r, head_z0_up + 15];   // [y, z] shaft along x
 // --- C-frame ---
 wall = 3;                               // column wall
 col = [-24, 24, rack_pitch_y + 3, base_y[1]];          // column x0, x1, y0 (front face), y1
-arm_top = 225;                          // top-arm top face (45° arm undersides from the widened column)
+arm_top = 233;                          // top-arm top face (frame 248 ≤ 250)
 arm_y0 = rod_y - 12;                    // top-arm front edge
 arm_xh = 46;                            // top-arm half-width
 arm_c = head_z0_up + head_h + 1;        // 45° arm underside starts here at the column face
@@ -142,3 +142,25 @@ gear_phase = -(_gap_z(head_z0_up + rack_z0, PI * pin_m) - pinion_axis[1]) / pin_
 spr_phase = (_gap_z(slider_z0_up + 2, PI * spr_m) - pinion_axis[1]) / spr_r * 180 / PI;
 assert(spr_m * (spr_t + 2) < shaft_d, "integral spring pinion must pass the shaft bores");
 assert(pin_m * (pin_t - 2.5) > shaft_hex / cos(30) + 3, "main pinion root clears its hex bore");
+
+// --- tools in the 43 mm ring (Task 4) ---
+m775_d = 42; m775_len = 67; m775_boss = [17.5, 4.5];   // UNVERIFIED
+m555_d = 35.8; m555_len = 57; m555_boss = [13, 3];      // UNVERIFIED
+chuck_d = 22; chuck_len = 40; bit_stickout = 20; shaft_gap = 8;   // UNVERIFIED
+iron_d = 22; iron_hot_len = 60; iron_barrel_d = 8;      // UNVERIFIED pen iron
+iron_air_gap = 15;                                      // PLA only: min air from any part to the hot zone
+ring_slit = 4;                                          // ring split: closes enough to grip the 775 (Ø42) directly
+sleeve_wall_min = 2;
+// D = ring bottom to tool tip with the tool at s = 0 (motor face / iron grip datum at the ring bottom)
+tool_D = tool == "iron" ? iron_hot_len + iron_air_gap : shaft_gap + chuck_len + bit_stickout;
+s_up = head_z0_up - tool_D - clear_min;                 // how far the tool sits below the ring at the "up" (highest) setting
+s_dn = head_z0_up - travel_len - tool_D + 1.5;          // lowest setting: tip 1.5 mm into the work pad
+tool_s = pose == "up" ? s_up : pose == "mid" ? (s_up + s_dn)/2 : s_dn;
+function tip_z(p, s) = head_z0_up - p - s - tool_D;
+clamp_force = 1000 * 0.5;                               // N: M5 preload x ring compliance factor
+assert(tip_z(0, s_up) >= clear_min, str("clearance ", tip_z(0, s_up)));
+assert(tip_z(travel_len, s_dn) <= 0 && tip_z(travel_len, s_dn) >= -pad[2], str("reach ", tip_z(travel_len, s_dn)));
+assert(s_up >= 0, "tool must sit at or below the ring bottom (iron: keeps the 15 mm air gap)");
+assert(mu * clamp_force >= 150, "ring clamp holds 3x a 50 N thrust");
+assert(PI * (ring_bore - m775_d) <= ring_slit, "ring split must close enough to grip the 775 without a shim");
+assert((ring_d - m555_d)/2 >= sleeve_wall_min && (ring_d - iron_d)/2 >= sleeve_wall_min, "sleeve walls");

@@ -17,7 +17,7 @@ module head_body() {
     translate([0, 0, z0]) cylinder(d = ring_d + 2 * ring_wall, h = ring_h, $fn = 128);
     translate([-ring_d/2, body_y0, z0]) cube([ring_d, 1, ring_h]);
   }
-  for (s = [-1, 1]) translate([s > 0 ? 1 : -9, -(ring_d/2 + ring_wall) - 9, z0]) cube([8, 12, ring_h]);   // clamp ears
+  for (s = [-1, 1]) translate([s > 0 ? ring_slit/2 : -ring_slit/2 - 8, -(ring_d/2 + ring_wall) - 9, z0]) cube([8, 12, ring_h]);   // clamp ears
   translate([-pin_w/2, 0, 0]) rotate([90, 0, 90]) linear_extrude(pin_w) mirror([1, -1]) rack2d_z(z0 + rack_z0, rack_teeth);   // 2D (z,y) -> world (y,z)
 }
 
@@ -26,10 +26,10 @@ module head() {
   difference() {
     head_body();
     translate([0, 0, z0 - 1]) cylinder(d = ring_bore, h = ring_h + 2, $fn = 128);
-    translate([-1, -(ring_d/2 + ring_wall) - 10, z0 - 1]) cube([2, 12, ring_h + 2]);          // ring split
+    translate([-ring_slit/2, -(ring_d/2 + ring_wall) - 10, z0 - 1]) cube([ring_slit, 12, ring_h + 2]);   // ring split
     let(y = -(ring_d/2 + ring_wall) - 4.5, z = z0 + ring_h/2) {                               // M5 clamp across the split
-      tear_x(m5_insert[0], -9.5, 8.5, y, z);
-      tear_x(m5_clear, 0, 9.5, y, z);
+      tear_x(m5_insert[0], -ring_slit/2 - 8.5, 8.5, y, z);
+      tear_x(m5_clear, 0, ring_slit/2 + 8.5, y, z);
     }
     for (x = rod_x) translate([x - slot_hw[0], rod_y - slot_hw[1], z0 - 1]) cube([2 * slot_hw[0], 2 * slot_hw[1], head_h + 2]);
     // thread-forming M3 adjusters (pilot 2.6) behind each gib, through the slot wall
