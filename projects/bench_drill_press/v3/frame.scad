@@ -17,6 +17,11 @@ module c_frame() {
     union() {
       slab(-base_x, base_x, base_y[0], base_y[1], -base_t, base_t);
       column_block(-1, arm_top);
+      // bearing bosses round both shaft bores (teardrop: 45° underside); they reach forward of the column face,
+      // clear of the head (only the 10 mm-wide rack needs the space in front of the column)
+      for (bx = [[col[0], col[0] + wall], [col[1] - wall, col[1]]]) let(r = shaft_bore/2 + 3)
+        translate([bx[0], pinion_axis[0], pinion_axis[1]]) rotate([0, 90, 0]) linear_extrude(bx[1] - bx[0])
+          hull() { circle(r = r, $fn = 48); translate([r / sin(45), 0]) square(0.01, center = true); }
       for (x = rod_x) hull() {                                   // top arm: column top -> rod boss, 45°+ undersides
         column_block(arm_c, arm_top);
         translate([x, rod_y, boss_z0]) cylinder(r = boss_r, h = arm_top - boss_z0, $fn = 64);
@@ -39,7 +44,7 @@ module c_frame() {
       }
     // front window: pinion meets the rack
     // pinion window (pointed top) + a low full-width slot where the Ø12 shaft clips the front wall
-    for (win = [[pin_w + 4, 11], [col[1] - col[0] - 2 * wall, 5]]) let(w = win[0], hh = win[1])
+    for (win = [[pin_w + 4, 11], [col[1] - col[0] - 2 * wall, 7]]) let(w = win[0], hh = win[1])
       translate([-w/2, col[2] - 1, pinion_axis[1] - hh]) rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(wall + 2)
         polygon([[0, 0], [w, 0], [w, 2 * hh], [w/2, 2 * hh + w/2], [0, 2 * hh]]);
     // rear access window (slider + spring go in from the back)
@@ -47,7 +52,8 @@ module c_frame() {
       rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(wall + 2)                  // pointed-arch top (45°)
         polygon([[0, 0], [w, 0], [w, arm_c - 70], [w/2, arm_c - 70 + w/2], [0, arm_c - 70]]);
     // shaft bores in both side walls; the gear pair goes in through the rear window and slides onto the hex
-    for (x = [col[0] - 1, col[1] - wall - 1]) tear_x(shaft_bore, x, wall + 2, pinion_axis[0], pinion_axis[1]);
+    tear_x(shaft_bore, col[0] - 1, wall + 2, pinion_axis[0], pinion_axis[1]);             // -x: Ø14.5 (shaft goes in from here)
+    tear_x(bore_px, col[1] - wall - 1, wall + 2, pinion_axis[0], pinion_axis[1]);         // +x: Ø9.7
     // rods: blind sockets in the base, through-holes in the bosses, M3 grub per boss
     for (x = rod_x) {
       translate([x, rod_y, -rod_socket]) cylinder(d = rod_bore, h = rod_socket + 0.01, $fn = 64);
@@ -59,20 +65,18 @@ module c_frame() {
     translate([-pad[0]/2, -pad[1]/2, -pad[2]]) cube([pad[0], pad[1], pad[2] + 1]);
   }
   // spring-slider rear guides on the side walls, only over the slider's range, 45° undersides
-  let(gz0 = slider_z0_up - 2, gz1 = pinion_axis[1] + 10, gy = slider_back + 0.3)
+  let(gz0 = slider_z0_up + 6, gz1 = pinion_axis[1] + 10, gy = slider_back + 0.3)       // start above the hook / spring
   for (g = [[slider_x + slider_w/2 + 0.3, col[1] - wall + 0.01], [col[0] + wall - 0.01, slider_x - slider_w/2 - 0.3]])
     hull() {
       translate([g[0], gy, gz0]) cube([g[1] - g[0], 4, gz1 - gz0]);
-      translate([g[0] < 0 ? g[0] : g[1] - 0.01, gy, gz0 - (g[1] - g[0])]) cube([0.01, 4, 1]);
+      translate([abs(g[0]) > abs(g[1]) ? g[0] : g[1] - 0.01, gy, gz0 - (g[1] - g[0])]) cube([0.01, 4, 1]);   // sliver on the wall side
     }
-  // top-stop ledge under the slider's right tab (45° underside)
+  // top-stop ledge under the slider's -x tab (3 x 5), 45° underside to the -x wall
   hull() {
-    translate([ledge[0] + 0.3, ledge[2], slider_z0_up - 4]) cube([col[1] - wall - ledge[0] - 0.3 + 0.01, ledge[3] - ledge[2], 4]);
-    translate([col[1] - wall - 0.01, ledge[2], slider_z0_up - 4 - (col[1] - wall - ledge[0])]) cube([0.01, ledge[3] - ledge[2], 1]);
+    translate([col[0] + wall - 0.01, ledge[2], slider_z0_up + tab_dz - 4]) cube([ledge[1] - 0.3 - (col[0] + wall) + 0.01, ledge[3] - ledge[2], 4]);
+    translate([col[0] + wall - 0.01, ledge[2], slider_z0_up + tab_dz - 4 - (ledge[1] - 0.3 - (col[0] + wall))]) cube([0.01, ledge[3] - ledge[2], 1]);
   }
-  // spring anchor peg from the right wall, with a lip
-  let(l = col[1] - wall - (slider_x - 7)) {                     // teardrop section: prints without support
-    tear_x(5, col[1] - wall - l, l + 0.01, spring_y, ks_anchor_z);
-    tear_x(7, col[1] - wall - l, 1.2, spring_y, ks_anchor_z);
-  }
+  // spring anchor: diamond bar across both walls (simply supported, no overhang)
+  translate([col[0] + wall - 0.01, spring_y, ks_anchor_z]) rotate([0, 90, 0]) linear_extrude(col[1] - col[0] - 2 * wall + 0.02)
+    rotate(45) square(anchor_d / sqrt(2), center = true);
 }

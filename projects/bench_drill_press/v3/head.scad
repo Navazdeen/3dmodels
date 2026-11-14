@@ -13,10 +13,8 @@ module rack2d_z(z0, n) {
 module head_body() {
   z0 = head_z0;
   slab(-body_x, body_x, body_y0, rack_root_y, z0, head_h, r = 3);
-  hull() {                                                          // 43 mm ring blended into the body
-    translate([0, 0, z0]) cylinder(d = ring_d + 2 * ring_wall, h = ring_h, $fn = 128);
-    translate([-ring_d/2, body_y0, z0]) cube([ring_d, 1, ring_h]);
-  }
+  translate([0, 0, z0]) cylinder(d = ring_d + 2 * ring_wall, h = ring_h, $fn = 128);          // 43 mm ring, free to flex...
+  translate([-ring_neck_hw, ring_d/2 + ring_wall - 1, z0]) cube([2 * ring_neck_hw, body_y0 - (ring_d/2 + ring_wall) + 1.01, ring_h]);   // ...joined only by a rear neck
   for (s = [-1, 1]) translate([s > 0 ? ring_slit/2 : -ring_slit/2 - 8, -(ring_d/2 + ring_wall) - 9, z0]) cube([8, 12, ring_h]);   // clamp ears
   translate([-pin_w/2, 0, 0]) rotate([90, 0, 90]) linear_extrude(pin_w) mirror([1, -1]) rack2d_z(z0 + rack_z0, rack_teeth);   // 2D (z,y) -> world (y,z)
 }
@@ -34,7 +32,8 @@ module head() {
     for (x = rod_x) translate([x - slot_hw[0], rod_y - slot_hw[1], z0 - 1]) cube([2 * slot_hw[0], 2 * slot_hw[1], head_h + 2]);
     // thread-forming M3 adjusters (pilot 2.6) behind each gib, through the slot wall
     for (x = rod_x, k = [0, 1]) let(s = -seat_side[k], zc = z0 + seat_z[k])
-      translate([x, rod_y + s * slot_hw[1] - (s > 0 ? 0 : 6), zc]) rotate([-90, 0, 0]) cylinder(d = 2.6, h = 6 + 0.01, $fn = 16);
+      let(y0 = s > 0 ? rod_y + slot_hw[1] : adj_front_y0, len = s > 0 ? 6 : rod_y - slot_hw[1] - adj_front_y0 + 0.01)
+        translate([x, y0, zc]) rotate([-90, 0, 0]) cylinder(d = 2.6, h = len, $fn = 16);   // front ones open on the body front face
   }
   for (x = rod_x, k = [0, 1]) {
     s = seat_side[k]; zc = z0 + seat_z[k]; zz = [k == 0 ? z0 : zc - seat_h/2, zc + seat_h/2];   // bottom seats start on the bed
@@ -56,10 +55,13 @@ module gib(x, g, _unused, k) {
   z0 = head_z0; zc = z0 + seat_z[k];
   blade = [rod_y + g * (rod_d/2 + 2 - gib_gap), rod_y + g * (rod_d/2 + 2 - gib_gap + gib_t)];    // y faces of the blade
   bump  = [rod_y + g * (rod_d/2 - gib_gap), blade[0] + g * 0.01];   // 0.01 into the blade: never face-to-face
-  zr = k == 0 ? [z0, z0 + seat_z[0] + gib_L] : [zc - gib_L, z0 + head_h];   // bottom gib stands on the bed, top gib grows from its root
+  zr = k == 0 ? [z0, z0 + seat_z[0] + gib_L + 5] : [zc - gib_L - 5, z0 + head_h];   // root block sits beyond gib_L: bending length = gib_L
   root = k == 0 ? [zr[1] - 5, zr[1]] : [zr[0], zr[0] + 5];
   translate([x - gib_b/2, min(blade), zr[0]]) cube([gib_b, gib_t, zr[1] - zr[0]]);
-  translate([x - gib_b/2, min(bump), zc - seat_h/2]) cube([gib_b, abs(bump[1] - bump[0]), seat_h]);
+  hull() {                                                       // bump with 1 mm 45° lead-ins (rod ends don't catch)
+    translate([x - gib_b/2, min(bump), zc - seat_h/2 + 1]) cube([gib_b, abs(bump[1] - bump[0]), seat_h - 2]);
+    translate([x - gib_b/2, g > 0 ? bump[0] + 1 : bump[1], zc - seat_h/2]) cube([gib_b, abs(bump[1] - bump[0]) - 1, seat_h]);
+  }
   translate([x - slot_hw[0] - 0.01, min(blade[1], rod_y + g * slot_hw[1]), root[0]])               // root block to the slot wall
     cube([2 * slot_hw[0] + 0.02, abs(rod_y + g * slot_hw[1] - blade[1]) + 0.01, 5]);
 }

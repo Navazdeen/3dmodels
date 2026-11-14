@@ -10,7 +10,7 @@ part = "all";
 parts = concat([
   ["c_frame","C-frame","PLA",[0,0,0],"print=auto"],
   ["head","Head (slide + rack + 43 mm ring)","PLA",[0,-40,0],"print=auto"],
-  ["shaft","Pinion shaft","PLA",[0,0,0],"print=y90"],
+  ["shaft","Pinion shaft","PLA",[0,0,0],"print=y-90"],
   ["gear_pair","Main pinion","PLA",[0,30,0],"print=y90"],
   ["spring_slider","Spring slider","PLA",[0,40,0],"print=auto"],
   ["handle_hub","Handle (3 spokes)","PLA",[40,0,0],"print=y90"],
@@ -22,9 +22,9 @@ parts = concat([
  : [["sleeve_iron","Iron sleeve (PLA, replaceable)","PLA",[0,-60,0],"print=x180","flex=head"], ["hw_iron_handle","Pen iron handle (UNVERIFIED)","",[0,-60,0],"flex=sleeve_iron"], ["hw_iron_hot","Iron hot zone"]]);
 checks = concat([ ["hw_rod","c_frame","<=",0.05], ["head","hw_rod","<=",0], ["head","c_frame",">=",1],
   ["gear_pair","head","<=",0.3], ["shaft","spring_slider","<=",0.3], ["shaft","c_frame","<=",0.3],
-  ["spring_slider","c_frame","<=",0.5], ["handle_hub","head",">=",1], ["handle_hub","hw_rod",">=",2]], tool == "iron" ? [["sleeve_iron","hw_iron_hot",">=",iron_air_gap], ["head","hw_iron_hot",">=",iron_air_gap], ["sleeve_iron","head","<=",0.3]]
+  ["spring_slider","c_frame","<=",0.5], ["handle_hub","head",">=",1], ["handle_hub","hw_rod",">=",2], ["handle_hub","c_frame","<=",0.05]], tool == "iron" ? [["sleeve_iron","hw_iron_hot",">=",iron_air_gap], ["c_frame","hw_iron_hot",">=",1], ["head","hw_iron_hot",">=",iron_air_gap], ["sleeve_iron","head","<=",0.3]]
   : tool == "555" ? [["sleeve_555","head","<=",0.3], ["hw_chuck_bit","c_frame",">=",0]] : [["hw_motor","head","<=",0.6], ["hw_chuck_bit","c_frame",">=",0]],
-  pose == "down" ? [["stop_ring","c_frame","touch"]] : [["stop_ring","c_frame","<=",0.05]]);
+  pose == "down" ? [["stop_ring","c_frame","touch"]] : [["stop_ring","c_frame",">=",1]]);
 report = [ ["frame h", frame_h()], ["rod cut length", rod_len], ["pinion axis", pinion_axis], ["gib k / gap / stress", [gib_k, gib_gap, gib_stress()]], ["tip moment 5 N / 50 N", [tip_moment(5), tip_moment(50)]], ["spring N top/bottom", [ks_force(0), ks_force(travel_len)]], ["return torque / need", [ret_torque(0), (head_mass*9.81 + friction) * pin_r]], ["tool / s / tip", [tool, tool_s, tip_z(plunge, tool_s)]] ];
 module pick(n){ if(part=="all"||part==n) children(); }
 pick("c_frame") c_frame();

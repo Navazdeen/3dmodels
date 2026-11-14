@@ -16,4 +16,4 @@ module ring_sleeve(id, vents = 0) {
   }
 }
 module sleeve_555() { ring_sleeve(m555_d + 0.2); }
-module sleeve_iron() { ring_sleeve(iron_d + 0.3, vents = 4); }
+module sleeve_iron() { ring_sleeve(iron_d + 0.3); }   // no vents: the ring covers the sleeve's outside

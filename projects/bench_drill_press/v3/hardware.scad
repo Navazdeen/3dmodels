@@ -1,6 +1,6 @@
 // Bought-part reference solids (hw_). Not printed.
 module hw_rods() { for (x = rod_x) translate([x, rod_y, -rod_socket]) cylinder(d = rod_d, h = rod_len, $fn = 48); }
-module hw_spring() { z1 = slider_z0_up + slider_dz(plunge) + 3;
+module hw_spring() { z1 = slider_z0_up + slider_dz(plunge) + 4 - slider_hook_d/2;
   translate([slider_x, spring_y, ks_anchor_z]) cylinder(d = ks_od, h = z1 - ks_anchor_z, $fn = 24); }
 function tool_face_z() = head_z0 - tool_s;              // motor face / iron datum (tip + tool_D)
 module hw_motor() {

@@ -11,7 +11,7 @@ Interactive 3D viewer: `drill_press_v3.html`. You can pull it apart, cut through
 | | v2 | v3 |
 |---|---|---|
 | Printed parts | ~25 | **9** (+ 1 test coupon) |
-| Screws | ~20 | **8** (1 × M5, 7 × M3) |
+| Screws | ~20 | **9** (1 × M5, 8 × M3) |
 | Guide | 4 printed sleeves with squeeze screws | **Preloaded V-slide**: V and flat-pad seats plus printed spring gibs, no gap, wear takes itself up |
 | Feed | Side lever, pushes off-centre (twist) | **Rack and pinion on the centreline**, 5.7 : 1 |
 | Frame | Base + bridge + spine + 8 screws | **One printed C-frame** |
@@ -56,7 +56,7 @@ Each of these is marked `UNVERIFIED` in `params.scad`. Measure yours, change the
 |---|---|---|
 | C-frame | As modelled, base on the bed | 248 mm tall. 4 walls, 25 % infill |
 | Head | Upright | 5 walls, 40 %. The rack teeth print like a thread |
-| Pinion shaft | Upright, hub end down | 100 % infill. 120 mm tall and thin: use a brim |
+| Pinion shaft | Upright, collar end down | 100 % infill. 120 mm tall: use a brim |
 | Main pinion | Flat | 100 % |
 | Spring slider | On its side | 100 % |
 | Handle (3 spokes) | Flat | 4 walls, 30 % |
@@ -67,21 +67,29 @@ Each of these is marked `UNVERIFIED` in `params.scad`. Measure yours, change the
 
 | Item | Qty | Use |
 |---|---|---|
-| Ø8 × 500 mm chrome rod (Robu), **cut to 2 × 245 mm** | 1 | Guide rods |
-| Bike kickstand spring | 1 | Head return |
-| M5 + insert | 1 | 43 mm ring clamp |
-| M3 grub/set screw + insert | 2 | Rod retention in the top arms |
-| M3 × 10, thread-forming into Ø2.6 pilots | 4 | Gib adjusters (re-tighten if the slide develops play) |
-| M3 × 12, thread-forming | 1 | Depth-stop ring clamp |
+| Ø8 × 500 mm chrome rod (Robu), **cut to 2 × 245 mm**. Chamfer the cut ends | 1 | Guide rods |
+| Bike kickstand spring | 1 | Head return: about 32 N at the top, 78 N at full plunge (modelled values) |
+| M5 × 20 + insert | 1 | 43 mm ring clamp |
+| M3 × 6 grub/set screw + insert | 2 | Rod retention in the top arms |
+| M3 × 16 thread-forming, Ø2.6 pilot | 2 | Front gib adjusters (bottom gibs), driven from the head's front face |
+| M3 × 10 thread-forming, Ø2.6 pilot | 2 | Rear gib adjusters (top gibs), driven from the head's back |
+| M3 × 12 thread-forming | 2 | Depth-stop ring clamp |
+
+**Recommended, not modelled:** a heat-proof work pad (thin aluminium or hardboard, 40 × 40 × 3 mm) in the base pocket for insert work. The iron tip reaches 1.5 mm into that pocket.
 
 ## Assembly order
 
-1. Fit the M5 insert in the ring ear and M3 inserts in the arm bosses. Run the 4 gib adjusters in until they just touch the blades.
-2. Put the **spring slider** and the **main pinion** into the column through the rear window. Hook the spring onto the anchor peg at the bottom and onto the slider's bar.
-3. Push the **pinion shaft** in from the +x side through the right wall, the main pinion's hex and the left wall, until its collar meets the right wall. Its built-in spring pinion meshes with the slider.
-4. Put the **head** between the arms with its rack in the window, then drop the **rods** through the arm bosses, the head and into the base sockets. Lock them with the 2 grub screws.
-5. Press the **handle** onto the +x hex. Slide the **stop ring** onto the −x end until its sleeve touches the wall, set the depth on the scale against the stop pin, and clamp it.
-6. Tools: the 775 goes straight into the ring. The 555 and iron go in their sleeves, with the sleeve split lined up with the ring's split. Set the height and clamp the M5.
+1. Fit the M5 insert in the ring ear and the M3 inserts in the arm bosses. Run the gib adjusters in until they just touch the blades.
+2. Through the column's rear window:
+   - Hook the spring's **lower** hook over the diamond bar near the floor, at about z 14. It sits just below the window's bottom edge, so use a bent wire or pliers.
+   - Lower the **spring slider** in **turned 90°**, then turn it upright between its guides with its tab on the −x side. Hook the spring's upper hook through the slider's cross-hole.
+   - Put the **main pinion** in (hex hole, along x).
+3. Pull the slider down until its tab sits on the ledge (top stop). This stretches the spring about 11 mm, roughly 32 N. Hold it there.
+4. Push the **pinion shaft** in **from the −x side**, small end first. It goes through the −x wall, its spring pinion meshes with the slider, the hex picks up the main pinion, and the tip goes out through the +x wall. The collar stops against the −x wall. Mesh the gears with the slider on its ledge and the head at the top.
+5. Put the **head** between the arms with its rack in the window, then drop the **rods** through the bosses, the head and into the base sockets. The gib bumps have lead-ins, but chamfer the rod ends anyway. Lock the rods with the 2 grub screws.
+6. Press the **handle** onto the +x hex until its sleeve touches the +x wall; this stops the shaft pulling out. Slide the **stop ring** onto the −x end.
+7. Set the depth: with the head at the top, turn the stop ring until the tick for the depth you want sits on the stop pin, then tighten both M3s. Ticks are every 2 mm, with long ticks every 10 mm.
+8. Tools: the 775 goes straight into the ring. The 555 and the iron go in their sleeves, with the sleeve's split lined up with the ring's. Set the height, then clamp the M5.
 
 ## Tuning
 
@@ -100,4 +108,4 @@ python3 ../../../common/tools/validate_stl.py stl/*.stl
 Known validator flags, all reviewed and accepted:
 - **C-frame:** knife edges where the rod holes exit the 45° arms.
 - **Pinion shaft:** the module-1 gear tooth tips.
-- **Sleeves and depth-stop ring:** split and counterbore corners.
+- **Sleeves and depth-stop ring:** split and counterbore corners, where they leave a curved surface.
