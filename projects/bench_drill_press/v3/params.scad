@@ -36,8 +36,8 @@ pinion_axis = [rack_pitch_y + pin_r, head_z0_up + 15];   // [y, z] shaft along x
 
 // --- C-frame ---
 wall = 3;                               // column wall
-col = [-22, 22, rack_pitch_y + 3, base_y[1]];          // column x0, x1, y0 (front face), y1
-arm_top = 215;                          // top-arm top face
+col = [-24, 24, rack_pitch_y + 3, base_y[1]];          // column x0, x1, y0 (front face), y1
+arm_top = 225;                          // top-arm top face (45° arm undersides from the widened column)
 arm_y0 = rod_y - 12;                    // top-arm front edge
 arm_xh = 46;                            // top-arm half-width
 arm_c = head_z0_up + head_h + 1;        // 45° arm underside starts here at the column face
@@ -59,11 +59,14 @@ assert(col[0] > rod_x[0] + rod_d/2 + 3 && col[1] < rod_x[1] - rod_d/2 - 3, "colu
 boss_r = 9;                             // top-arm rod boss radius
 boss_z0 = arm_top - 10;                 // boss underside (45° hull to the column top)
 pin_w = 10;                             // pinion face width (window = pin_w + 4)
-slider_w = 12;                          // spring-slider width (x)
-spr_m = 1; spr_t = 10;                  // spring pinion module, teeth
-spr_r = spr_m * spr_t / 2;              // 5 pitch radius
+slider_x = 12;                          // spring pinion + slider centre (x); main pinion sits at x = 0
+slider_w = 10;                          // spring-slider width (x), centred on slider_x
+spr_m = 1; spr_t = 8;                   // spring pinion cut into the shaft: tips Ø10 pass the Ø12 bores
+spr_r = spr_m * spr_t / 2;              // 4 pitch radius
+spr_b = 12;                             // spring pinion face width
 slider_back = pinion_axis[0] + spr_r + 1.25 * spr_m + 7;   // slider rear face (body 7 behind the tooth root)
-lug = [5, 6, 4];                        // depth-stop lug (x, y, z) on the column's -x face
+lug_pin_d = 7;                          // depth-stop pin (along x) the ring's tooth hits
+lug_off = [11.3, 11.3];                 // pin centre offset from the shaft axis (y behind, z above): R 16
 assert(col[1] - col[0] - 2*wall - 6 >= (pin_t + 2) * pin_m + 1, "gear pair must pass the rear access window");
 
 // --- head (Task 2) ---
@@ -95,3 +98,47 @@ assert(seat_side == [+1, -1], "rigid seats must sit where the feed tips the head
 assert(seat_z[1] - seat_z[0] >= 56, "seat spacing");
 assert(ring_d == 43, "Euro collar");
 for (F = [2, 5, 50]) assert(tip_moment(F) >= -2 * gib_preload * (seat_z[1] - seat_z[0]), str("feed ", F, " N lifts a gib"));
+
+// --- drive (Task 3) ---
+shaft_hex = 10;                         // hex across flats (gear pair + handle hub), passes the Ø12 bores
+shaft_x = [-58, 62];                    // shaft ends
+collar = [16, 2];                       // retaining collar outside the +x wall (Ø, thickness)
+hub_x = [50, 62];                       // handle hub on the +x hex end (clear of head x ±44)
+spoke_r = 60;                           // handle spoke radius
+stop_x = [-56, -48];                    // depth-stop ring, outboard of the head (its tooth sweeps a full circle)
+stop_tooth_r = 19;                      // ring tooth radius (reaches past the pin centre)
+stop_ring_r = 11;                       // ring body radius (M3 clamp pilot has 1 mm wall each side)
+mu = 0.3;                               // PLA on chrome rod
+n_contacts_normal = 4 + 2 + 2 * sqrt(2);// gib + pad + V-flank normals, in units of gib_preload
+friction = mu * gib_preload * n_contacts_normal;                 // N
+ks_L0 = 75; ks_k = 2.0; ks_T0 = 10; ks_od = 12; ks_max_ext = 0.5;   // UNVERIFIED kickstand spring
+ks_need = 1.25 * (head_mass * 9.81 + friction) * pin_r / spr_r;     // N at the top
+ks_x_top = max(0.5, (ks_need - ks_T0) / ks_k);                    // preload stretch at the top
+function shaft_rot(p) = p / pin_r * 180 / PI;                     // deg about +x, head down -> +
+function slider_dz(p) = p * spr_r / pin_r;                        // slider rises as the head drops
+slider_h = 34;                          // fits under the column's pyramid roof at full plunge
+slider_z0_up = pinion_axis[1] - 25;                               // slider bottom at the top pose (rests on its ledge)
+ks_anchor_z = slider_z0_up - (ks_L0 + ks_x_top);
+function ks_ext(p) = ks_x_top + slider_dz(p);
+function ks_force(p) = ks_T0 + ks_k * ks_ext(p);
+function ret_torque(p) = ks_force(p) * spr_r;                     // N·mm lifting the head (+)
+function gear_stress(F, m, b) = F / (b * m * 0.3);                // Lewis, Y ≈ 0.3
+rack_len = rack_teeth * PI * pin_m;
+n_printed = 10; n_screws = 8;                                     // design_v3 §2 budget
+assert(ret_torque(0) >= 1.25 * (head_mass * 9.81 + friction) * pin_r - 0.01, str("return torque ", ret_torque(0)));
+assert(ret_torque(0) > 0 && ret_torque(travel_len) > 0, "spring must lift the head at both ends");
+assert(ks_ext(travel_len) <= ks_max_ext * ks_L0, str("kickstand over-stretched: ", ks_ext(travel_len)));
+assert(ks_anchor_z > wall, "spring anchor above the column floor");
+assert(rack_len >= travel_len + 4 + pin_r, str("rack too short: ", rack_len));
+assert(gear_stress(ks_force(travel_len), spr_m, spr_b) <= 25, str("spring pinion tooth stress ", gear_stress(ks_force(travel_len), spr_m, spr_b)));
+assert(gear_stress(ks_force(travel_len) * spr_r / pin_r + 50, pin_m, pin_w) <= 25, "main pinion tooth stress");
+assert(2 * PI * pin_r >= travel_len, "stop ring one turn covers the travel");
+assert(n_printed <= 10 && n_screws <= 8, "part / screw budget");
+spring_y = slider_back - 0.5;           // kickstand spring axis y (hooks the slider's rear bar)
+ledge = [slider_x + slider_w/2, slider_x + slider_w/2 + 2.7, pinion_axis[0] + spr_r + 1.25 * spr_m, pinion_axis[0] + spr_r + 1.25 * spr_m + 1.6];   // tab/ledge x0,x1,y0,y1
+// tooth phases: BOSL2 puts a tooth on local +y (= world +y after the rotate onto x); turn so a tooth sits in the rack gap at the mesh
+function _gap_z(z0, p) = z0 + (round((pinion_axis[1] - z0) / p - 0.5) + 0.5) * p;
+gear_phase = -(_gap_z(head_z0_up + rack_z0, PI * pin_m) - pinion_axis[1]) / pin_r * 180 / PI;
+spr_phase = (_gap_z(slider_z0_up + 2, PI * spr_m) - pinion_axis[1]) / spr_r * 180 / PI;
+assert(spr_m * (spr_t + 2) < shaft_d, "integral spring pinion must pass the shaft bores");
+assert(pin_m * (pin_t - 2.5) > shaft_hex / cos(30) + 3, "main pinion root clears its hex bore");

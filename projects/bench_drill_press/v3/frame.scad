@@ -22,9 +22,13 @@ module c_frame() {
         translate([x, rod_y, boss_z0]) cylinder(r = boss_r, h = arm_top - boss_z0, $fn = 64);
         translate([x, rod_y, boss_z0 - (boss_r - 6)]) cylinder(r1 = 6, r2 = boss_r, h = boss_r - 6, $fn = 64);   // 45° cone under the boss, clear of the rod hole
       }
-      hull() {                                                   // depth-stop lug, 45° underside
-        translate([col[0] - lug[0], pinion_axis[0] - lug[1]/2, pinion_axis[1] + 16]) cube(lug);
-        translate([col[0] - 0.01, pinion_axis[0] - lug[1]/2, pinion_axis[1] + 16 - lug[0]]) cube([0.01, lug[1], lug[0] + lug[2]]);
+      let(py = pinion_axis[0] + lug_off[0], pz = pinion_axis[1] + lug_off[1], ax = stop_x[1] + 1) {
+        hull() {                                                 // arm from the column to just short of the ring, 45° underside
+          translate([ax, py - 3, pz - 3]) cube([col[0] - ax + 0.01, 6, 6]);
+          translate([col[0] - 0.01, py - 3, pz - 3 - (col[0] - ax)]) cube([0.01, 6, 1]);
+        }
+        translate([stop_x[0] - 1, py, pz]) rotate([0, 90, 0]) linear_extrude(ax - stop_x[0] + 1.01)   // stop pin, teardrop section
+          hull() { circle(d = lug_pin_d, $fn = 32); translate([-lug_pin_d/2 / sin(40), 0]) square(0.01, center = true); }
       }
     }
     // hollow column (open bottom into the base pocket is not needed: floor stays)
@@ -34,8 +38,10 @@ module c_frame() {
         translate([(col[0] + col[1])/2 - 0.5, col[2] + wall + iy/2 - 0.5, top + max(ix, iy)/2 - 0.5]) cube([1, 1, 0.5]);
       }
     // front window: pinion meets the rack
-    translate([-(pin_w + 4)/2, col[2] - 1, pinion_axis[1] - 16]) rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(wall + 2)
-      polygon([[0, 0], [pin_w + 4, 0], [pin_w + 4, 32], [(pin_w + 4)/2, 32 + (pin_w + 4)/2], [0, 32]]);   // pointed top
+    // pinion window (pointed top) + a low full-width slot where the Ø12 shaft clips the front wall
+    for (win = [[pin_w + 4, 11], [col[1] - col[0] - 2 * wall, 5]]) let(w = win[0], hh = win[1])
+      translate([-w/2, col[2] - 1, pinion_axis[1] - hh]) rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(wall + 2)
+        polygon([[0, 0], [w, 0], [w, 2 * hh], [w/2, 2 * hh + w/2], [0, 2 * hh]]);
     // rear access window (slider + spring go in from the back)
     let(w = col[1] - col[0] - 2*wall - 6) translate([col[0] + wall + 3, col[3] - wall - 1, 20])
       rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(wall + 2)                  // pointed-arch top (45°)
@@ -52,7 +58,21 @@ module c_frame() {
     // work-pad pocket
     translate([-pad[0]/2, -pad[1]/2, -pad[2]]) cube([pad[0], pad[1], pad[2] + 1]);
   }
-  // spring-slider rear guides, hung on the column side walls (mesh force pushes the slider rearward onto them)
-  for (s = [-1, 1]) translate([s > 0 ? slider_w/2 + 0.3 : col[0] + wall - 0.01, slider_back + 0.3, -0.01])
-    cube([col[1] - wall - slider_w/2 - 0.3 + 0.01, 4, pinion_axis[1] + 10]);   // from the floor: no overhang
+  // spring-slider rear guides on the side walls, only over the slider's range, 45° undersides
+  let(gz0 = slider_z0_up - 2, gz1 = pinion_axis[1] + 10, gy = slider_back + 0.3)
+  for (g = [[slider_x + slider_w/2 + 0.3, col[1] - wall + 0.01], [col[0] + wall - 0.01, slider_x - slider_w/2 - 0.3]])
+    hull() {
+      translate([g[0], gy, gz0]) cube([g[1] - g[0], 4, gz1 - gz0]);
+      translate([g[0] < 0 ? g[0] : g[1] - 0.01, gy, gz0 - (g[1] - g[0])]) cube([0.01, 4, 1]);
+    }
+  // top-stop ledge under the slider's right tab (45° underside)
+  hull() {
+    translate([ledge[0] + 0.3, ledge[2], slider_z0_up - 4]) cube([col[1] - wall - ledge[0] - 0.3 + 0.01, ledge[3] - ledge[2], 4]);
+    translate([col[1] - wall - 0.01, ledge[2], slider_z0_up - 4 - (col[1] - wall - ledge[0])]) cube([0.01, ledge[3] - ledge[2], 1]);
+  }
+  // spring anchor peg from the right wall, with a lip
+  let(l = col[1] - wall - (slider_x - 7)) {                     // teardrop section: prints without support
+    tear_x(5, col[1] - wall - l, l + 0.01, spring_y, ks_anchor_z);
+    tear_x(7, col[1] - wall - l, 1.2, spring_y, ks_anchor_z);
+  }
 }
