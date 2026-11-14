@@ -31,12 +31,12 @@ head_z0_up = 110;                       // head bottom (= 43 mm ring bottom) at 
 head_z0 = head_z0_up - plunge;
 pin_m = 1.5; pin_t = 14;                // main pinion module, teeth
 pin_r = pin_m * pin_t / 2;              // 10.5 pitch radius
-rack_pitch_y = 62;                      // rack pitch line (head rear)
+rack_pitch_y = 66;                      // rack pitch line (head rear); room for a 3 mm wall behind the rods
 pinion_axis = [rack_pitch_y + pin_r, head_z0_up + 15];   // [y, z] shaft along x: 72.5, 125
 
 // --- C-frame ---
 wall = 3;                               // column wall
-col = [-22, 22, rack_pitch_y + 2, base_y[1]];          // column x0, x1, y0 (front face), y1
+col = [-22, 22, rack_pitch_y + 3, base_y[1]];          // column x0, x1, y0 (front face), y1
 arm_top = 215;                          // top-arm top face
 arm_y0 = rod_y - 12;                    // top-arm front edge
 arm_xh = 46;                            // top-arm half-width
@@ -65,3 +65,33 @@ spr_r = spr_m * spr_t / 2;              // 5 pitch radius
 slider_back = pinion_axis[0] + spr_r + 1.25 * spr_m + 7;   // slider rear face (body 7 behind the tooth root)
 lug = [5, 6, 4];                        // depth-stop lug (x, y, z) on the column's -x face
 assert(col[1] - col[0] - 2*wall - 6 >= (pin_t + 2) * pin_m + 1, "gear pair must pass the rear access window");
+
+// --- head (Task 2) ---
+pa = 30;                                // pressure angle: 30° so the vertical rack prints like a thread
+body_x = 44;                            // head body half-width
+body_y0 = 20;                           // head body front face
+rack_root_y = rack_pitch_y - 1.25 * pin_m;
+slot_hw = [6, 11];                      // rod slot half-size (x, y) around each rod
+seat_h = 12;                            // seat / gib contact height
+seat_z = [7, 63];                       // contact centres above the head bottom (spacing 56)
+seat_side = [+1, -1];                   // rigid seat side per zone [bottom, top]: +1 behind the rods, -1 in front
+gib_L = 25; gib_t = 2; gib_b = 10;      // flexure blade length (root to contact), thickness, width
+gib_preload = 3.5;                      // N per gib
+E_pla = 3000;                           // MPa
+gib_k = E_pla * gib_b * pow(gib_t, 3) / (4 * pow(gib_L, 3));   // N/mm (cantilever, end load)
+gib_gap = gib_preload / gib_k;          // interference with the rod as printed (sets the preload)
+function gib_stress() = 6 * gib_preload * gib_L / (gib_b * gib_t * gib_t);   // MPa
+ring_d = 43;                            // Euro collar
+ring_bore = fit_mid("H9", ring_d);
+ring_h = 30; ring_wall = 5;
+rack_teeth = 13;
+rack_z0 = 4.5;                          // first rack tooth above the head bottom
+head_cg_y = 15;                         // UNVERIFIED head + tool centre of gravity (mostly the motor at y 0)
+head_mass = 0.55;                       // UNVERIFIED kg
+// moment that tips the head, N·mm, + = top rearward (loads the rigid seats). Rack force down = work - weight.
+function tip_moment(F_work) = (F_work - head_mass * 9.81) * rack_pitch_y + head_mass * 9.81 * head_cg_y;   // work reaction acts at y = 0
+assert(gib_stress() <= 15, str("gib stress ", gib_stress(), " MPa"));
+assert(seat_side == [+1, -1], "rigid seats must sit where the feed tips the head (top front, bottom rear)");
+assert(seat_z[1] - seat_z[0] >= 56, "seat spacing");
+assert(ring_d == 43, "Euro collar");
+for (F = [2, 5, 50]) assert(tip_moment(F) >= -2 * gib_preload * (seat_z[1] - seat_z[0]), str("feed ", F, " N lifts a gib"));
