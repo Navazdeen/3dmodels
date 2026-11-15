@@ -8,26 +8,33 @@ include <hardware.scad>
 
 part = "all";
 parts = concat([
-  ["c_frame","C-frame","PLA",[0,0,0],"print=auto"],
+  ["base","Base","PLA",[0,0,-40],"print=auto","group=frame"],
+  ["column","Column (U-channel)","PLA",[0,60,0],"print=x90","group=frame"],
+  ["rear_cover","Rear cover","PLA",[0,110,0],"print=x-90","group=frame"],
+  ["top_arm","Top arm","PLA",[0,0,60],"print=x180","group=frame"],
   ["head","Head (slide + rack + 43 mm ring)","PLA",[0,-40,0],"print=auto"],
   ["shaft","Pinion shaft","PLA",[0,0,0],"print=y-90"],
   ["gear_pair","Main pinion","PLA",[0,30,0],"print=y90"],
   ["spring_slider","Spring slider","PLA",[0,40,0],"print=auto"],
   ["handle_hub","Handle (3 spokes)","PLA",[40,0,0],"print=y90"],
   ["stop_ring","Depth-stop ring","PLA",[-40,0,0],"print=y-90"],
-  ["hw_spring","Bike kickstand spring (UNVERIFIED)","",[0,40,0],"flex=spring_slider,c_frame"],
+  ["hw_spring","Bike kickstand spring (UNVERIFIED)","",[0,40,0],"flex=spring_slider,base"],
   ["hw_rod","Rod Ø8","cut from one 500 mm rod",[0,0,0],"pieces=2","flex=head"]
 ], tool == "775" ? [["hw_motor","775 motor (UNVERIFIED size)","",[0,-60,0],"flex=head"], ["hw_chuck_bit","Chuck + bit"]]
  : tool == "555" ? [["sleeve_555","555 sleeve","PLA",[0,-60,0],"print=x180","flex=head"], ["hw_motor","555 motor (UNVERIFIED size)","",[0,-60,0],"flex=sleeve_555"], ["hw_chuck_bit","Chuck + bit"]]
  : [["sleeve_iron","Iron sleeve (PLA, replaceable)","PLA",[0,-60,0],"print=x180","flex=head"], ["hw_iron_handle","Pen iron handle (UNVERIFIED)","",[0,-60,0],"flex=sleeve_iron"], ["hw_iron_hot","Iron hot zone"]]);
-checks = concat([ ["hw_rod","c_frame","<=",0.05], ["head","hw_rod","<=",0], ["head","c_frame",">=",1],
-  ["gear_pair","head","<=",0.3], ["shaft","spring_slider","<=",0.3], ["shaft","c_frame","<=",0.3],
-  ["spring_slider","c_frame","<=",0.5], ["handle_hub","head",">=",1], ["handle_hub","hw_rod",">=",2], ["handle_hub","c_frame","<=",0.05]], tool == "iron" ? [["sleeve_iron","hw_iron_hot",">=",iron_air_gap], ["c_frame","hw_iron_hot",">=",1], ["head","hw_iron_hot",">=",iron_air_gap], ["sleeve_iron","head","<=",0.3]]
-  : tool == "555" ? [["sleeve_555","head","<=",0.3], ["hw_chuck_bit","c_frame",">=",0]] : [["hw_motor","head","<=",0.6], ["hw_chuck_bit","c_frame",">=",0]],
-  pose == "down" ? [["stop_ring","c_frame","touch"]] : [["stop_ring","c_frame",">=",1]]);
-report = [ ["frame h", frame_h()], ["rod cut length", rod_len], ["pinion axis", pinion_axis], ["gib k / gap / stress", [gib_k, gib_gap, gib_stress()]], ["tip moment 5 N / 50 N", [tip_moment(5), tip_moment(50)]], ["spring N top/bottom", [ks_force(0), ks_force(travel_len)]], ["return torque / need", [ret_torque(0), (head_mass*9.81 + friction) * pin_r]], ["tool / s / tip", [tool, tool_s, tip_z(plunge, tool_s)]] ];
+checks = concat([ ["hw_rod","base","<=",0.05], ["hw_rod","top_arm","<=",0.05], ["column","base","touch"], ["top_arm","column","touch"], ["rear_cover","column","touch"],
+  ["head","hw_rod","<=",0], ["head","frame",">=",1],
+  ["gear_pair","head","<=",0.3], ["shaft","spring_slider","<=",0.3], ["shaft","frame","<=",0.3],
+  ["spring_slider","frame","<=",0.5], ["handle_hub","head",">=",1], ["handle_hub","hw_rod",">=",2], ["handle_hub","frame","<=",0.05]], tool == "iron" ? [["sleeve_iron","hw_iron_hot",">=",iron_air_gap], ["frame","hw_iron_hot",">=",1], ["head","hw_iron_hot",">=",iron_air_gap], ["sleeve_iron","head","<=",0.3]]
+  : tool == "555" ? [["sleeve_555","head","<=",0.3], ["hw_chuck_bit","frame",">=",0]] : [["hw_motor","head","<=",0.6], ["hw_chuck_bit","frame",">=",0]],
+  []);   // depth-stop check returns in Task 3 (rod collar)
+report = [ ["frame h", frame_h(), "column len", col_len], ["rod cut length", rod_len], ["pinion axis", pinion_axis], ["gib k / gap / stress", [gib_k, gib_gap, gib_stress()]], ["tip moment 5 N / 50 N", [tip_moment(5), tip_moment(50)]], ["spring N top/bottom", [ks_force(0), ks_force(travel_len)]], ["return torque / need", [ret_torque(0), (head_mass*9.81 + friction) * pin_r]], ["tool / s / tip", [tool, tool_s, tip_z(plunge, tool_s)]] ];
 module pick(n){ if(part=="all"||part==n) children(); }
-pick("c_frame") c_frame();
+pick("base") base();
+pick("column") column();
+pick("rear_cover") rear_cover();
+pick("top_arm") top_arm();
 pick("head") head();
 pick("shaft") shaft();
 pick("gear_pair") gear_pair();

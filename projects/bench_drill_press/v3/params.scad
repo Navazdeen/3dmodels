@@ -14,7 +14,7 @@ plunge = pose == "up" ? 0 : pose == "mid" ? travel_len/2 : travel_len;
 bed = [220, 220, 250];                  // Kobra 2 Neo
 base_t = 15;                            // base plate thickness
 base_x = 70;                            // base half-width
-base_y = [-80, 100];                    // base front / rear edge
+base_y = [-76, 112];                    // base front / rear edge (rear: collar round column + cover)
 pad = [40, 40, 3];                      // work-pad pocket at the origin
 clear_min = 40;                         // tip clearance, head up, tool highest
 
@@ -36,7 +36,7 @@ pinion_axis = [rack_pitch_y + pin_r, head_z0_up + 15];   // [y, z] shaft along x
 
 // --- C-frame ---
 wall = 3;                               // column wall
-col = [-24, 24, rack_pitch_y + 3, base_y[1]];          // column x0, x1, y0 (front face), y1
+col = [-24, 24, rack_pitch_y + 3, 100];          // column x0, x1, y0 (front face), y1
 arm_top = 233;                          // top-arm top face (frame 248 ≤ 250)
 arm_y0 = rod_y - 12;                    // top-arm front edge
 arm_xh = 46;                            // top-arm half-width
@@ -207,3 +207,19 @@ assert(fillet_r >= 1, "inside corners need >= 1 mm fillets (PLA is notch-sensiti
 assert(ef >= 0.3 && ef <= 0.5, "elephant-foot chamfer on bed-side fitting edges (PLA 0.3-0.4 mm)");
 assert(norm(lug_off) - lug_pin_d/2 - stop_ring_r >= 1, "stop pin clears the ring body");
 assert(stop_tooth_r > norm(lug_off), "tooth reaches past the pin centre");
+
+// ===== v3.1 frame split (plan_v3_1 Task 1) =====
+arm_t = 20;                             // top-arm plate thickness
+col_top = arm_top - arm_t;              // column top = arm underside
+key_d = 3; key_c = 0.2;                 // column ends sit key_d deep in pockets (clearance key_c) in the base and arm
+col_len = col_top + 2 * key_d;          // printed length of the column (lying on its side)
+cjoint = [6, 15];                       // base collar / arm skirt round the column ends: wall, height
+bolt_y = [col[2] + 8, col[2] + 8 + 15];  // side-bolt y positions (rear one clears the spring anchor post)
+cover_t = 3;                            // rear cover thickness (closes the U-channel)
+m5_nut = [8.1, 4.2];                    // M5 nut across flats, thickness
+col_print_h = col[1] - col[0];          // column lying on its -x side: print height = its width
+assert(col_len <= bed[0] - 1, str("column ", col_len, " mm long: must fit the bed lying down"));
+assert(base_t <= 120 && col_print_h <= 120 && arm_t <= 120 && cover_t <= 120, "print heights");
+assert(key_c <= 0.2, "joint key clearance");
+assert(cjoint[0] >= 5 && cjoint[1] >= 12, "collar/skirt must hold an M5 nut-and-bolt joint");
+ledge_x1 = min(ledge[1] - 0.3, slider_x - ks_od/2 - 0.5);   // ledge stops short of the spring envelope
