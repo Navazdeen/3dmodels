@@ -6,42 +6,63 @@
    44.7,
    32.0
   ],
-  "volume_mm3": 13683.0,
+  "volume_mm3": 13659.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
-  "bed_contact_mm2": 552.0,
-  "wall_min_mm": 0.48,
+  "bed_contact_mm2": 444.0,
+  "wall_min_mm": 0.3,
   "wall_p1_mm": 2.0,
-  "thin_area_mm2": 6.8,
-  "thin_area_pct": 0.08,
-  "sub_feature_area_mm2": 3.4,
+  "thin_area_mm2": 13.3,
+  "thin_area_pct": 0.15,
+  "sub_feature_area_mm2": 3.7,
   "thin_regions": [
    {
-    "area_mm2": 3.4,
-    "min_mm": 0.48,
+    "area_mm2": 9.5,
+    "min_mm": 0.43,
     "at_mm": [
-     -2.1,
-     20.5,
-     16.0
+     2.0,
+     20.4,
+     8.7
     ]
    },
    {
     "area_mm2": 3.4,
     "min_mm": 0.48,
     "at_mm": [
-     2.1,
+     -2.1,
      20.5,
-     16.0
+     8.2
     ]
    }
   ],
   "overhang_area_mm2": 0.0,
   "overhang_pct": 0.0,
-  "bridges": [],
+  "bridges": [
+   {
+    "span_mm": 5.0,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 5.0,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 0.9,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 0.9,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   }
+  ],
   "issues": [
-   "FAIL thin wall 0.48 mm over 3.4 mm2 at [-2.1, 20.5, 16.0]",
-   "FAIL thin wall 0.48 mm over 3.4 mm2 at [2.1, 20.5, 16.0]"
+   "FAIL thin wall 0.43 mm over 9.5 mm2 at [2.0, 20.4, 8.7]",
+   "FAIL thin wall 0.48 mm over 3.4 mm2 at [-2.1, 20.5, 8.2]"
   ],
   "verdict": "FAIL"
  },
@@ -52,61 +73,97 @@
    180.0,
    248.0
   ],
-  "volume_mm3": 590786.0,
+  "volume_mm3": 591084.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
   "bed_contact_mm2": 24541.0,
   "wall_min_mm": 0.0,
   "wall_p1_mm": 3.0,
-  "thin_area_mm2": 4.1,
-  "thin_area_pct": 0.0,
-  "sub_feature_area_mm2": 4.1,
+  "thin_area_mm2": 85.3,
+  "thin_area_pct": 0.07,
+  "sub_feature_area_mm2": 71.2,
   "thin_regions": [
    {
-    "area_mm2": 0.9,
-    "min_mm": 0.5,
+    "area_mm2": 14.2,
+    "min_mm": 0.51,
     "at_mm": [
-     -43.7,
-     42.1,
-     243.0
+     -40.5,
+     75.2,
+     162.6
     ]
    },
    {
-    "area_mm2": 0.9,
-    "min_mm": 0.5,
+    "area_mm2": 14.1,
+    "min_mm": 0.61,
     "at_mm": [
-     -43.7,
-     37.9,
-     243.0
+     -41.1,
+     79.6,
+     168.6
     ]
    },
    {
-    "area_mm2": 0.9,
-    "min_mm": 0.5,
+    "area_mm2": 9.3,
+    "min_mm": 0.51,
     "at_mm": [
-     43.7,
-     42.1,
-     243.0
+     -40.5,
+     84.3,
+     161.9
     ]
    },
    {
-    "area_mm2": 0.9,
-    "min_mm": 0.5,
+    "area_mm2": 6.9,
+    "min_mm": 0.09,
     "at_mm": [
-     43.7,
-     37.9,
-     243.0
+     -40.5,
+     82.3,
+     156.4
+    ]
+   },
+   {
+    "area_mm2": 6.9,
+    "min_mm": 0.09,
+    "at_mm": [
+     -40.5,
+     76.9,
+     156.4
+    ]
+   },
+   {
+    "area_mm2": 2.5,
+    "min_mm": 0.72,
+    "at_mm": [
+     -41.0,
+     75.1,
+     164.1
+    ]
+   },
+   {
+    "area_mm2": 2.5,
+    "min_mm": 0.72,
+    "at_mm": [
+     -41.0,
+     78.5,
+     155.7
+    ]
+   },
+   {
+    "area_mm2": 2.5,
+    "min_mm": 0.72,
+    "at_mm": [
+     -41.0,
+     80.7,
+     155.7
     ]
    }
   ],
-  "overhang_area_mm2": 88.8,
-  "overhang_pct": 0.07,
+  "overhang_area_mm2": 113.0,
+  "overhang_pct": 0.09,
   "bridges": [
    {
-    "span_mm": 1.4,
-    "area_mm2": 22.0,
-    "z_mm": 157.0
+    "span_mm": 1.8,
+    "area_mm2": 30.0,
+    "z_mm": 156.6
    },
    {
     "span_mm": 1.0,
@@ -115,74 +172,96 @@
    }
   ],
   "issues": [
-   "WARN thin wall 0.5 mm over 0.9 mm2 at [-43.7, 42.1, 243.0]",
-   "WARN thin wall 0.5 mm over 0.9 mm2 at [-43.7, 37.9, 243.0]",
-   "WARN thin wall 0.5 mm over 0.9 mm2 at [43.7, 42.1, 243.0]",
-   "WARN thin wall 0.5 mm over 0.9 mm2 at [43.7, 37.9, 243.0]",
-   "WARN 88.8 mm2 overhang > 45.0 deg"
+   "FAIL thin wall 0.51 mm over 14.2 mm2 at [-40.5, 75.2, 162.6]",
+   "FAIL thin wall 0.61 mm over 14.1 mm2 at [-41.1, 79.6, 168.6]",
+   "FAIL thin wall 0.51 mm over 9.3 mm2 at [-40.5, 84.3, 161.9]",
+   "FAIL thin wall 0.09 mm over 6.9 mm2 at [-40.5, 82.3, 156.4]",
+   "FAIL thin wall 0.09 mm over 6.9 mm2 at [-40.5, 76.9, 156.4]",
+   "FAIL thin wall 0.72 mm over 2.5 mm2 at [-41.0, 75.1, 164.1]",
+   "FAIL thin wall 0.72 mm over 2.5 mm2 at [-41.0, 78.5, 155.7]",
+   "FAIL thin wall 0.72 mm over 2.5 mm2 at [-41.0, 80.7, 155.7]",
+   "WARN 113.0 mm2 overhang > 45.0 deg"
   ],
-  "verdict": "WARN"
+  "verdict": "FAIL"
  },
  {
   "part": "Depth-stop_ring",
   "bbox_mm": [
    25.0,
-   33.5,
+   33.4,
    14.0
   ],
-  "volume_mm3": 4621.0,
+  "volume_mm3": 4618.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
-  "bed_contact_mm2": 349.0,
+  "bed_contact_mm2": 332.0,
   "wall_min_mm": 0.01,
-  "wall_p1_mm": 0.53,
-  "thin_area_mm2": 220.0,
-  "thin_area_pct": 7.08,
-  "sub_feature_area_mm2": 135.4,
+  "wall_p1_mm": 0.54,
+  "thin_area_mm2": 211.9,
+  "thin_area_pct": 6.84,
+  "sub_feature_area_mm2": 127.5,
   "thin_regions": [
    {
-    "area_mm2": 84.5,
-    "min_mm": 0.03,
+    "area_mm2": 36.2,
+    "min_mm": 0.54,
     "at_mm": [
-     -11.1,
-     7.7,
-     5.4
+     -11.3,
+     7.6,
+     13.3
     ]
    },
    {
-    "area_mm2": 26.8,
-    "min_mm": 0.37,
+    "area_mm2": 32.6,
+    "min_mm": 0.41,
     "at_mm": [
      -7.2,
-     5.4,
-     7.0
+     5.5,
+     7.6
     ]
    },
    {
-    "area_mm2": 25.9,
+    "area_mm2": 25.7,
     "min_mm": 0.09,
     "at_mm": [
-     -11.5,
-     6.5,
-     1.2
+     -11.3,
+     6.9,
+     1.3
     ]
    },
    {
-    "area_mm2": 19.9,
-    "min_mm": 0.02,
+    "area_mm2": 19.8,
+    "min_mm": 0.01,
     "at_mm": [
      -11.4,
-     6.2,
+     6.6,
      13.1
     ]
    },
    {
+    "area_mm2": 15.0,
+    "min_mm": 0.52,
+    "at_mm": [
+     -11.1,
+     7.7,
+     0.0
+    ]
+   },
+   {
+    "area_mm2": 14.1,
+    "min_mm": 0.79,
+    "at_mm": [
+     -9.4,
+     6.1,
+     0.0
+    ]
+   },
+   {
     "area_mm2": 8.0,
-    "min_mm": 0.1,
+    "min_mm": 0.01,
     "at_mm": [
      -11.0,
-     6.7,
+     6.9,
      6.5
     ]
    },
@@ -190,27 +269,9 @@
     "area_mm2": 8.0,
     "min_mm": 1.1,
     "at_mm": [
-     -11.0,
-     6.6,
-     7.6
-    ]
-   },
-   {
-    "area_mm2": 6.6,
-    "min_mm": 0.01,
-    "at_mm": [
-     -10.5,
-     10.3,
-     10.2
-    ]
-   },
-   {
-    "area_mm2": 5.0,
-    "min_mm": 0.72,
-    "at_mm": [
-     -9.8,
-     -1.8,
-     3.5
+     -10.9,
+     6.8,
+     7.5
     ]
    }
   ],
@@ -218,25 +279,25 @@
   "overhang_pct": 2.08,
   "bridges": [
    {
-    "span_mm": 2.6,
+    "span_mm": 2.5,
     "area_mm2": 8.0,
     "z_mm": 6.5
    },
    {
-    "span_mm": 2.6,
+    "span_mm": 2.5,
     "area_mm2": 8.0,
     "z_mm": 13.5
    }
   ],
   "issues": [
-   "FAIL thin wall 0.03 mm over 84.5 mm2 at [-11.1, 7.7, 5.4]",
-   "FAIL thin wall 0.37 mm over 26.8 mm2 at [-7.2, 5.4, 7.0]",
-   "FAIL thin wall 0.09 mm over 25.9 mm2 at [-11.5, 6.5, 1.2]",
-   "FAIL thin wall 0.02 mm over 19.9 mm2 at [-11.4, 6.2, 13.1]",
-   "FAIL thin wall 0.1 mm over 8.0 mm2 at [-11.0, 6.7, 6.5]",
-   "WARN thin wall 1.1 mm over 8.0 mm2 at [-11.0, 6.6, 7.6]",
-   "FAIL thin wall 0.01 mm over 6.6 mm2 at [-10.5, 10.3, 10.2]",
-   "FAIL thin wall 0.72 mm over 5.0 mm2 at [-9.8, -1.8, 3.5]",
+   "FAIL thin wall 0.54 mm over 36.2 mm2 at [-11.3, 7.6, 13.3]",
+   "FAIL thin wall 0.41 mm over 32.6 mm2 at [-7.2, 5.5, 7.6]",
+   "FAIL thin wall 0.09 mm over 25.7 mm2 at [-11.3, 6.9, 1.3]",
+   "FAIL thin wall 0.01 mm over 19.8 mm2 at [-11.4, 6.6, 13.1]",
+   "FAIL thin wall 0.52 mm over 15.0 mm2 at [-11.1, 7.7, 0.0]",
+   "FAIL thin wall 0.79 mm over 14.1 mm2 at [-9.4, 6.1, 0.0]",
+   "FAIL thin wall 0.01 mm over 8.0 mm2 at [-11.0, 6.9, 6.5]",
+   "WARN thin wall 1.1 mm over 8.0 mm2 at [-10.9, 6.8, 7.5]",
    "WARN 64.5 mm2 overhang > 45.0 deg"
   ],
   "verdict": "FAIL"
@@ -248,11 +309,11 @@
    117.9,
    38.0
   ],
-  "volume_mm3": 21297.0,
+  "volume_mm3": 24523.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
-  "bed_contact_mm2": 1893.0,
+  "bed_contact_mm2": 2287.0,
   "wall_min_mm": 2.42,
   "wall_p1_mm": 2.42,
   "thin_area_mm2": 0.0,
@@ -272,19 +333,65 @@
    103.0,
    70.0
   ],
-  "volume_mm3": 222003.0,
+  "volume_mm3": 223068.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
-  "bed_contact_mm2": 3547.0,
-  "wall_min_mm": 1.31,
+  "bed_contact_mm2": 3530.0,
+  "wall_min_mm": 0.01,
   "wall_p1_mm": 2.0,
-  "thin_area_mm2": 0.0,
-  "thin_area_pct": 0.0,
-  "sub_feature_area_mm2": 0.0,
-  "thin_regions": [],
-  "overhang_area_mm2": 573.2,
-  "overhang_pct": 1.19,
+  "thin_area_mm2": 164.3,
+  "thin_area_pct": 0.34,
+  "sub_feature_area_mm2": 142.2,
+  "thin_regions": [
+   {
+    "area_mm2": 54.8,
+    "min_mm": 0.69,
+    "at_mm": [
+     11.2,
+     -46.8,
+     14.6
+    ]
+   },
+   {
+    "area_mm2": 49.5,
+    "min_mm": 0.69,
+    "at_mm": [
+     -11.2,
+     -46.8,
+     14.3
+    ]
+   },
+   {
+    "area_mm2": 33.5,
+    "min_mm": 0.02,
+    "at_mm": [
+     -10.5,
+     -46.7,
+     14.2
+    ]
+   },
+   {
+    "area_mm2": 25.8,
+    "min_mm": 0.01,
+    "at_mm": [
+     10.5,
+     -46.9,
+     14.1
+    ]
+   },
+   {
+    "area_mm2": 0.7,
+    "min_mm": 0.52,
+    "at_mm": [
+     7.0,
+     12.0,
+     0.7
+    ]
+   }
+  ],
+  "overhang_area_mm2": 588.8,
+  "overhang_pct": 1.22,
   "bridges": [
    {
     "span_mm": 11.0,
@@ -308,19 +415,24 @@
    },
    {
     "span_mm": 3.9,
-    "area_mm2": 47.0,
+    "area_mm2": 36.0,
     "z_mm": 32.0
    },
    {
     "span_mm": 3.9,
-    "area_mm2": 47.0,
+    "area_mm2": 36.0,
     "z_mm": 32.0
    }
   ],
   "issues": [
-   "WARN 573.2 mm2 overhang > 45.0 deg"
+   "FAIL thin wall 0.69 mm over 54.8 mm2 at [11.2, -46.8, 14.6]",
+   "FAIL thin wall 0.69 mm over 49.5 mm2 at [-11.2, -46.8, 14.3]",
+   "FAIL thin wall 0.02 mm over 33.5 mm2 at [-10.5, -46.7, 14.2]",
+   "FAIL thin wall 0.01 mm over 25.8 mm2 at [10.5, -46.9, 14.1]",
+   "WARN thin wall 0.52 mm over 0.7 mm2 at [7.0, 12.0, 0.7]",
+   "WARN 588.8 mm2 overhang > 45.0 deg"
   ],
-  "verdict": "WARN"
+  "verdict": "FAIL"
  },
  {
   "part": "Iron_sleeve_PLA_replaceable",
@@ -329,42 +441,63 @@
    44.7,
    32.0
   ],
-  "volume_mm3": 32863.0,
+  "volume_mm3": 32842.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
-  "bed_contact_mm2": 1151.0,
-  "wall_min_mm": 0.48,
+  "bed_contact_mm2": 1060.0,
+  "wall_min_mm": 0.3,
   "wall_p1_mm": 2.0,
-  "thin_area_mm2": 6.8,
-  "thin_area_pct": 0.07,
-  "sub_feature_area_mm2": 3.4,
+  "thin_area_mm2": 19.3,
+  "thin_area_pct": 0.21,
+  "sub_feature_area_mm2": 3.7,
   "thin_regions": [
    {
-    "area_mm2": 3.4,
+    "area_mm2": 9.5,
     "min_mm": 0.48,
     "at_mm": [
-     -2.1,
-     20.5,
-     16.0
+     -2.0,
+     20.4,
+     8.7
     ]
    },
    {
-    "area_mm2": 3.4,
-    "min_mm": 0.48,
+    "area_mm2": 9.5,
+    "min_mm": 0.43,
     "at_mm": [
-     2.1,
-     20.5,
-     16.0
+     2.0,
+     20.4,
+     8.7
     ]
    }
   ],
   "overhang_area_mm2": 0.0,
   "overhang_pct": 0.0,
-  "bridges": [],
+  "bridges": [
+   {
+    "span_mm": 5.0,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 5.0,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 0.9,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 0.9,
+    "area_mm2": 4.0,
+    "z_mm": 0.4
+   }
+  ],
   "issues": [
-   "FAIL thin wall 0.48 mm over 3.4 mm2 at [-2.1, 20.5, 16.0]",
-   "FAIL thin wall 0.48 mm over 3.4 mm2 at [2.1, 20.5, 16.0]"
+   "FAIL thin wall 0.48 mm over 9.5 mm2 at [-2.0, 20.4, 8.7]",
+   "FAIL thin wall 0.43 mm over 9.5 mm2 at [2.0, 20.4, 8.7]"
   ],
   "verdict": "FAIL"
  },
@@ -375,20 +508,51 @@
    23.9,
    10.0
   ],
-  "volume_mm3": 2491.0,
+  "volume_mm3": 2486.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
-  "bed_contact_mm2": 249.0,
-  "wall_min_mm": 1.43,
+  "bed_contact_mm2": 231.0,
+  "wall_min_mm": 1.16,
   "wall_p1_mm": 1.43,
-  "thin_area_mm2": 0.0,
-  "thin_area_pct": 0.0,
+  "thin_area_mm2": 0.3,
+  "thin_area_pct": 0.01,
   "sub_feature_area_mm2": 0.0,
   "thin_regions": [],
   "overhang_area_mm2": 0.0,
   "overhang_pct": 0.0,
-  "bridges": [],
+  "bridges": [
+   {
+    "span_mm": 1.4,
+    "area_mm2": 1.1,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 1.4,
+    "area_mm2": 1.1,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 1.4,
+    "area_mm2": 1.1,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 1.4,
+    "area_mm2": 1.1,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 0.8,
+    "area_mm2": 1.1,
+    "z_mm": 0.4
+   },
+   {
+    "span_mm": 0.8,
+    "area_mm2": 1.1,
+    "z_mm": 0.4
+   }
+  ],
   "issues": [],
   "verdict": "PASS"
  },
@@ -399,15 +563,15 @@
    18.5,
    120.0
   ],
-  "volume_mm3": 13186.0,
+  "volume_mm3": 13183.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,
-  "bed_contact_mm2": 165.0,
+  "bed_contact_mm2": 147.0,
   "wall_min_mm": 0.51,
   "wall_p1_mm": 0.51,
   "thin_area_mm2": 155.5,
-  "thin_area_pct": 2.89,
+  "thin_area_pct": 2.9,
   "sub_feature_area_mm2": 100.2,
   "thin_regions": [
    {
@@ -423,8 +587,8 @@
     "area_mm2": 6.6,
     "min_mm": 0.51,
     "at_mm": [
-     -0.3,
-     6.8,
+     0.3,
+     -6.8,
      52.5
     ]
    },
@@ -432,17 +596,8 @@
     "area_mm2": 6.6,
     "min_mm": 0.51,
     "at_mm": [
-     0.3,
-     -6.8,
-     52.5
-    ]
-   },
-   {
-    "area_mm2": 5.6,
-    "min_mm": 0.51,
-    "at_mm": [
-     3.9,
-     4.3,
+     -0.3,
+     6.8,
      52.5
     ]
    },
@@ -452,6 +607,15 @@
     "at_mm": [
      -3.9,
      -4.3,
+     52.5
+    ]
+   },
+   {
+    "area_mm2": 5.6,
+    "min_mm": 0.51,
+    "at_mm": [
+     3.9,
+     4.3,
      52.5
     ]
    },
@@ -494,10 +658,10 @@
   ],
   "issues": [
    "FAIL thin wall 0.51 mm over 107.0 mm2 at [-0.0, -0.0, 51.3]",
-   "FAIL thin wall 0.51 mm over 6.6 mm2 at [-0.3, 6.8, 52.5]",
    "FAIL thin wall 0.51 mm over 6.6 mm2 at [0.3, -6.8, 52.5]",
-   "FAIL thin wall 0.51 mm over 5.6 mm2 at [3.9, 4.3, 52.5]",
+   "FAIL thin wall 0.51 mm over 6.6 mm2 at [-0.3, 6.8, 52.5]",
    "FAIL thin wall 0.51 mm over 5.6 mm2 at [-3.9, -4.3, 52.5]",
+   "FAIL thin wall 0.51 mm over 5.6 mm2 at [3.9, 4.3, 52.5]",
    "FAIL thin wall 0.51 mm over 5.6 mm2 at [-5.7, 1.2, 52.5]",
    "FAIL thin wall 0.51 mm over 5.6 mm2 at [5.7, -1.2, 52.5]",
    "FAIL thin wall 0.51 mm over 3.7 mm2 at [6.4, 1.6, 52.5]"
@@ -551,7 +715,7 @@
    9.2,
    13.0
   ],
-  "volume_mm3": 3313.0,
+  "volume_mm3": 3315.0,
   "watertight": true,
   "winding_ok": true,
   "bodies": 1,

@@ -10,6 +10,9 @@ module ring_sleeve(id, vents = 0) {
       for (a = [180, 235, 305, 0]) rotate(a) translate([ring_d/2 - 1, -4, z0 + ring_h]) cube([5, 8, 2]);   // tabs (front arc only: the head body sits behind)
     }
     translate([0, 0, z0 - 1]) cylinder(d = id, h = ring_h + 4, $fn = 96);
+    // printed upside down: the tab end is on the bed -> chamfer its bore (the tabs keep the outside edge)
+    translate([0, 0, z0 + ring_h + 2]) ef_cone(id, 0, up = false);
+
     translate([-ring_slit/2, -ring_d/2 - 6, z0 - 1]) cube([ring_slit, ring_d/2, ring_h + 4]);          // split, in line with the ring's
     if (vents > 0) for (i = [0:vents-1]) rotate(45 + i * 90) translate([id/2 + sleeve_wall_min, -1.5, z0 + 5])   // vertical vent slots inside the wall
       cube([(od - id)/2 - sleeve_wall_min + 1, 3, ring_h - 10]);   // open to the outside

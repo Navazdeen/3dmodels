@@ -67,8 +67,8 @@ spr_m = 1; spr_t = 12;                  // spring pinion cut into the shaft (-x 
 spr_r = spr_m * spr_t / 2;              // 4 pitch radius
 spr_b = 12;                             // spring pinion face width
 slider_back = pinion_axis[0] + spr_r + 1.25 * spr_m + 7;   // slider rear face (body 7 behind the tooth root)
-lug_pin_d = 7;                          // depth-stop pin (along x) the ring's tooth hits
-lug_off = [12.5, 12.5];                 // pin centre offset from the shaft axis (y behind, z above): R 17.7
+lug_pin_d = 9;                          // depth-stop pin (along x): ~14 MPa at 30 N on the handle
+lug_off = [13.1, 13.1];                 // pin centre offset from the shaft axis (y behind, z above): R 18.5
 assert(col[1] - col[0] - 2*wall - 6 >= (pin_t + 2) * pin_m + 1, "gear pair must pass the rear access window");
 
 // --- head (Task 2) ---
@@ -199,3 +199,11 @@ assert(tick_dir == 1, "depth scale reads backwards");
 assert(stop_screws * mu * 1000 * stop_r_shaft >= 1.2 * T_stop, "depth stop slips under hand force");
 assert(ring_arm_stress() <= 10, str("ring arm stress ", ring_arm_stress(), " MPa to grip the 775"));
 assert(tab_xy[0] >= 3 && tab_xy[1] >= 5, "top-stop tab too small");
+
+// ===== print-rule fixes (3d-print-designer: fillet inside corners; PLA elephant-foot chamfer 0.3-0.4) =====
+fillet_r = 1.5;                         // inside-corner fillet at loaded roots
+ef = 0.4;                               // elephant-foot chamfer on bed-side fitting edges
+assert(fillet_r >= 1, "inside corners need >= 1 mm fillets (PLA is notch-sensitive)");
+assert(ef >= 0.3 && ef <= 0.5, "elephant-foot chamfer on bed-side fitting edges (PLA 0.3-0.4 mm)");
+assert(norm(lug_off) - lug_pin_d/2 - stop_ring_r >= 1, "stop pin clears the ring body");
+assert(stop_tooth_r > norm(lug_off), "tooth reaches past the pin centre");

@@ -97,6 +97,19 @@ Each of these is marked `UNVERIFIED` in `params.scad`. Measure yours, change the
 - **Head doesn't return fully:** the spring is weaker than modelled. Measure `ks_k` and `ks_T0`, update them, and `check.sh` will move the anchor peg. Reprint the C-frame only if the anchor moves.
 - **Bits snapping:** check for play first, then feed more slowly. At 5.7 : 1 the handle is sensitive.
 
+## Print-rule audit (2026-11-15)
+
+Checked against the vendored skills (`common/skills/3d-print-designer`, `common/skills/openscad`) with `asm.py --print --walls` and `validate_stl.py`:
+- **No supports.** The only overhangs over 45° are the rack's 60° thread-like flanks, within PLA's ability. Bridges are 12 mm at most.
+- **No structural walls under 1.2 mm.** The readings under 1.2 mm are gear tooth tips, knife edges where holes leave curved or 45° faces, and the stop-ring scale ticks.
+- **Fillets** (PLA is notch-sensitive): 1.5 mm at the gib blade roots, a flared ring neck, gussets on the clamp ears, a filleted slider tab, a flared stop-pin root and tapered handle spokes.
+- **0.4 mm elephant-foot chamfers** on bed-side fitting edges: the ring bore, the rod seats and gib bumps, the main pinion's tips and hex, the handle hex, the stop-ring bore, the shaft end and the sleeve bores.
+- **Stop pin** is now Ø9, about 14 MPa at 30 N on the handle.
+- **Holes:** modelled at exact ISO fits (OpenSCAD skill rule). Turn on hole/XY compensation in your slicer.
+- **Still worth knowing:**
+  - The pinion shaft prints upright, so twisting load shears the layer bonds: about 11 MPa worst case, roughly 1.5–2× margin.
+  - The frame is 248 mm tall on a 250 mm Z axis.
+
 ## Check / regenerate
 
 ```

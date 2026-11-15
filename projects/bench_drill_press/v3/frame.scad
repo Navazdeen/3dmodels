@@ -10,6 +10,11 @@ module tear_x(d, x0, l, y, z) {
     translate([-d/2 / sin(40), 0]) square(0.01, center = true); }
 }
 
+// concave fillet profile: fills the corner at the origin between the +u and +v legs
+module fillet2d(r) { difference() { square(r); translate([r, r]) circle(r = r, $fn = 24); } }
+// bed-side lead-in: a cone (d+2*ef -> d over ef) cut at a hole entry on the bed face
+module ef_cone(d, z0, up = true) { translate([0, 0, up ? z0 - 0.01 : z0 - ef + 0.01]) cylinder(d1 = up ? d + 2*ef : d, d2 = up ? d : d + 2*ef, h = ef, $fn = 64); }
+
 module column_block(z0, z1) { translate([col[0], col[2], z0]) cube([col[1] - col[0], col[3] - col[2], z1 - z0]); }
 
 module c_frame() {
@@ -27,13 +32,16 @@ module c_frame() {
         translate([x, rod_y, boss_z0]) cylinder(r = boss_r, h = arm_top - boss_z0, $fn = 64);
         translate([x, rod_y, boss_z0 - (boss_r - 6)]) cylinder(r1 = 6, r2 = boss_r, h = boss_r - 6, $fn = 64);   // 45° cone under the boss, clear of the rod hole
       }
-      let(py = pinion_axis[0] + lug_off[0], pz = pinion_axis[1] + lug_off[1], ax = stop_x[1] + 1) {
+      let(py = pinion_axis[0] + lug_off[0], pz = pinion_axis[1] + lug_off[1], ax = stop_x[1] + 1 + fillet_r + 1) {   // arm ends clear of the ring + root flare
         hull() {                                                 // arm from the column to just short of the ring, 45° underside
           translate([ax, py - 3, pz - 3]) cube([col[0] - ax + 0.01, 6, 6]);
           translate([col[0] - 0.01, py - 3, pz - 3 - (col[0] - ax)]) cube([0.01, 6, 1]);
         }
         translate([stop_x[0] - 1, py, pz]) rotate([0, 90, 0]) linear_extrude(ax - stop_x[0] + 1.01)   // stop pin, teardrop section
           hull() { circle(d = lug_pin_d, $fn = 32); translate([-lug_pin_d/2 / sin(40), 0]) square(0.01, center = true); }
+        hull() for (k = [[ax - fillet_r, lug_pin_d], [ax, lug_pin_d + 2 * fillet_r]])                   // root flare (fillet) at the arm
+          translate([k[0], py, pz]) rotate([0, 90, 0]) linear_extrude(0.01)
+            hull() { circle(d = k[1], $fn = 32); translate([-k[1]/2 / sin(40), 0]) square(0.01, center = true); }
       }
     }
     // hollow column (open bottom into the base pocket is not needed: floor stays)

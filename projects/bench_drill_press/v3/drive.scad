@@ -10,7 +10,8 @@ module xcyl(d, x0, x1) { translate([x0, 0, 0]) rotate([0, 90, 0]) cylinder(d = d
 module shaft() {
   c0 = col[0] - collar[1]; cone = (collar[0] - shaft_d) / 2; sp = [slider_x - spr_b/2, slider_x + spr_b/2];
   at_shaft(plunge) {
-    xcyl(shaft_d, shaft_x[0], c0 - cone + 0.01);                                                  // stop section
+    xcyl(shaft_d, shaft_x[0] + ef, c0 - cone + 0.01);                                             // stop section
+    translate([shaft_x[0], 0, 0]) rotate([0, 90, 0]) cylinder(d1 = shaft_d - 2*ef, d2 = shaft_d, h = ef + 0.01, $fn = 48);   // bed-end chamfer
     translate([c0 - cone, 0, 0]) rotate([0, 90, 0]) cylinder(d1 = shaft_d, d2 = collar[0], h = cone + 0.01, $fn = 48);  // 45° under the collar
     xcyl(collar[0], c0, col[0]);                                                                   // collar (bears on the -x wall)
     xcyl(shaft_d, col[0], sp[0] + 0.01);                                                           // -x journal + spacer
@@ -27,6 +28,12 @@ module gear_pair() {   // main pinion on the hex
   at_shaft(plunge) difference() {
     rotate([0, 90, 0]) rotate(gear_phase) spur_gear(mod = pin_m, teeth = pin_t, thickness = pin_w, pressure_angle = pa, shaft_diam = 0);
     hex_x(shaft_hex + 0.25, -pin_w/2 - 1, pin_w/2 + 1);
+    // printed +x face down (y90): 0.4 mm chamfer on the tooth tips and the hex entry at that face
+    translate([pin_w/2, 0, 0]) rotate([0, -90, 0]) difference() {
+      cylinder(r = pin_r + pin_m + 1, h = ef + 0.01, $fn = 64);
+      translate([0, 0, -0.01]) cylinder(r1 = pin_r + pin_m - ef, r2 = pin_r + pin_m + 0.02, h = ef + 0.03, $fn = 64);
+    }
+    translate([pin_w/2 + 0.01, 0, 0]) rotate([0, -90, 0]) cylinder(d1 = (shaft_hex + 0.25)/cos(30) + 2*ef, d2 = (shaft_hex + 0.25)/cos(30), h = ef, $fn = 6);
   }
 }
 
@@ -48,6 +55,8 @@ module spring_slider() {
       translate([slider_x - slider_w/2, rt, z0]) cube([slider_w, slider_back - rt, slider_h]);
       rack_z(slider_x - spr_b/2 + 1, spr_b - 2, z0 + 2, floor((slider_h - 4) / (PI * spr_m)), spr_m, pinion_axis[0] + spr_r, -1, 0.01);
       translate([ledge[0], ledge[2], z0 + tab_dz]) cube([ledge[1] - ledge[0] + 1, ledge[3] - ledge[2], 5]);   // tab (1 mm into the body): rests on the ledge = top stop
+      translate([ledge[1] + 0.01, ledge[2], z0 + tab_dz + 5 - 0.01]) rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(ledge[3] - ledge[2])
+        scale([-1, 1]) fillet2d(fillet_r);                                                   // fillet on the tab's top root (tension side)
     }
     tear_x(slider_hook_d, slider_x - slider_w/2 - 1, slider_w + 2, spring_y, z0 + 4);  // cross-hole for the spring hook
   }
@@ -59,10 +68,11 @@ module handle_hub() {   // flat on the bed; its sleeve bears on the +x wall (hol
       translate([hub_x[0], 0, 0]) rotate([0, 90, 0]) cylinder(d = 26, h = hub_x[1] - hub_x[0], $fn = 64);
       xcyl(journal_px + 5, col[1], hub_x[0] + 0.01);                                              // sleeve to the +x wall
       for (a = [0, 120, 240]) rotate([a, 0, 0]) translate([hub_x[0] + 4, 0, 0]) rotate([0, 90, 0]) linear_extrude(hub_x[1] - hub_x[0] - 4)   // spokes on the bed side
-        hull() { circle(d = 9, $fn = 24); translate([-spoke_r, 0]) circle(d = 7, $fn = 24); }
+        hull() { circle(d = 16, $fn = 32); translate([-spoke_r, 0]) circle(d = 7, $fn = 24); }   // tapered root
       for (a = [0, 120, 240]) rotate([a, 0, 0]) translate([hub_x[0], 0, spoke_r]) rotate([0, 90, 0]) cylinder(d = 14, h = hub_x[1] - hub_x[0], $fn = 32);
     }
     hex_x(hub_hex + 0.15, hub_x[0] - 0.01, hub_x[1] + 1);                                        // press fit on the hex
+    translate([hub_x[1] + 0.01, 0, 0]) rotate([0, -90, 0]) rotate(30) cylinder(d1 = (hub_hex + 0.15)/cos(30) + 2*ef, d2 = (hub_hex + 0.15)/cos(30), h = ef, $fn = 6);   // bed-side lead-in
     xcyl(journal_px + 0.15, col[1] - 1, hub_x[0] + 0.02);                                         // sleeve bore
   }
 }
@@ -83,6 +93,7 @@ module stop_ring() {
     for (i = [0:2:40]) rotate([tick_angle(i), 0, 0])                                             // 2 mm ticks, long every 10
       translate([stop_x[0] - 0.01, -0.3, stop_ring_r - 0.6]) cube([i % 10 == 0 ? 5 : 2.5, 0.6, 1]);
     xcyl(shaft_d + 0.15, stop_x[0] - 1, stop_x[1] + 1);
+    translate([stop_x[0] - 0.01, 0, 0]) rotate([0, 90, 0]) cylinder(d1 = shaft_d + 0.15 + 2*ef, d2 = shaft_d + 0.15, h = ef, $fn = 48);   // bed-side lead-in
     rotate([split_deg, 0, 0]) {                                                                 // split + clamps on the arc the scale doesn't use
     translate([stop_x[0] - 1, -0.75, -stop_ring_r - 1]) cube([w + 2, 1.5, stop_ring_r - shaft_d/2 + 1.1]);   // clamp split
     let(zc = -(shaft_d/2 + stop_ring_r)/2, ch = sqrt(stop_ring_r^2 - zc^2))                         // 2 tangential M3 clamps

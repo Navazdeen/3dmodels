@@ -15,7 +15,14 @@ module head_body() {
   slab(-body_x, body_x, body_y0, rack_root_y, z0, head_h, r = 3);
   translate([0, 0, z0]) cylinder(d = ring_d + 2 * ring_wall, h = ring_h, $fn = 128);          // 43 mm ring, free to flex...
   translate([-ring_neck_hw, ring_d/2 + ring_wall - 1, z0]) cube([2 * ring_neck_hw, body_y0 - (ring_d/2 + ring_wall) + 1.01, ring_h]);   // ...joined only by a rear neck
-  for (s = [-1, 1]) translate([s > 0 ? ring_slit/2 : -ring_slit/2 - 8, -(ring_d/2 + ring_wall) - 9, z0]) cube([8, 12, ring_h]);   // clamp ears
+  hull() {                                                          // neck flares into the body (fillet)
+    translate([-ring_neck_hw, body_y0 - fillet_r, z0]) cube([2 * ring_neck_hw, 0.01, ring_h]);
+    translate([-ring_neck_hw - fillet_r, body_y0 - 0.01, z0]) cube([2 * (ring_neck_hw + fillet_r), 0.02, ring_h]);
+  }
+  for (s = [-1, 1]) hull() {                                       // clamp ears, gusseted into the ring (no sharp root)
+    translate([s > 0 ? ring_slit/2 : -ring_slit/2 - 8, -(ring_d/2 + ring_wall) - 9, z0]) cube([8, 12, ring_h]);
+    let(xo = ring_slit/2 + 8 + 3) translate([s > 0 ? xo - 3 : -xo, -sqrt(pow(ring_d/2 + ring_wall - 0.5, 2) - xo*xo) - 1, z0]) cube([3, 1, ring_h]);
+  }
   translate([-pin_w/2, 0, 0]) rotate([90, 0, 90]) linear_extrude(pin_w) mirror([1, -1]) rack2d_z(z0 + rack_z0, rack_teeth);   // 2D (z,y) -> world (y,z)
 }
 
@@ -24,10 +31,11 @@ module head() {
   difference() {
     head_body();
     translate([0, 0, z0 - 1]) cylinder(d = ring_bore, h = ring_h + 2, $fn = 128);
+    ef_cone(ring_bore, z0);                                                                      // bed-side lead-in
     translate([-ring_slit/2, -(ring_d/2 + ring_wall) - 10, z0 - 1]) cube([ring_slit, 12, ring_h + 2]);   // ring split
     let(y = -(ring_d/2 + ring_wall) - 4.5, z = z0 + ring_h/2) {                               // M5 clamp across the split
-      tear_x(m5_insert[0], -ring_slit/2 - 8.5, 8.5, y, z);
-      tear_x(m5_clear, 0, ring_slit/2 + 8.5, y, z);
+      tear_x(m5_insert[0], -ring_slit/2 - 14, 14, y, z);          // through the ear gusset
+      tear_x(m5_clear, 0, ring_slit/2 + 14, y, z);
     }
     for (x = rod_x) translate([x - slot_hw[0], rod_y - slot_hw[1], z0 - 1]) cube([2 * slot_hw[0], 2 * slot_hw[1], head_h + 2]);
     // thread-forming M3 adjusters (pilot 2.6) behind each gib, through the slot wall
@@ -35,7 +43,7 @@ module head() {
       let(y0 = s > 0 ? rod_y + slot_hw[1] : adj_front_y0, len = s > 0 ? 6 : rod_y - slot_hw[1] - adj_front_y0 + 0.01)
         translate([x, y0, zc]) rotate([-90, 0, 0]) cylinder(d = 2.6, h = len, $fn = 16);   // front ones open on the body front face
   }
-  for (x = rod_x, k = [0, 1]) {
+  difference() { union() { for (x = rod_x, k = [0, 1]) {
     s = seat_side[k]; zc = z0 + seat_z[k]; zz = [k == 0 ? z0 : zc - seat_h/2, zc + seat_h/2];   // bottom seats start on the bed
     // rigid seat on side s: V on the left rod, flat pad on the right rod
     difference() {
@@ -47,10 +55,12 @@ module head() {
         cube([2 * slot_hw[0] + 2, s > 0 ? 50 + rod_d/2 : 50, zz[1] - zz[0] + 2]);      // flat pad face tangent to the rod
     }
     gib(x, -s, k == 0 ? z0 : zc - seat_h/2 - (gib_L - seat_h/2) + seat_h, k);
-  }
+  } }
+  for (x = rod_x) rod_ef(x); }
 }
 
 // flexure gib on side g (+1 behind the rod) of rod x; blade from root to the contact zone, bump presses the rod
+module rod_ef(x) { translate([x, rod_y, 0]) ef_cone(rod_d, head_z0); }   // trims V, pad and bump edges at the bed
 module gib(x, g, _unused, k) {
   z0 = head_z0; zc = z0 + seat_z[k];
   blade = [rod_y + g * (rod_d/2 + 2 - gib_gap), rod_y + g * (rod_d/2 + 2 - gib_gap + gib_t)];    // y faces of the blade
@@ -64,4 +74,8 @@ module gib(x, g, _unused, k) {
   }
   translate([x - slot_hw[0] - 0.01, min(blade[1], rod_y + g * slot_hw[1]), root[0]])               // root block to the slot wall
     cube([2 * slot_hw[0] + 0.02, abs(rod_y + g * slot_hw[1] - blade[1]) + 0.01, 5]);
+  // fillet where the blade leaves the root block (max bending stress): toward the wall (g), toward the free end
+  let(edge = k == 0 ? root[0] : root[1], up = k == 0 ? -1 : 1)
+    translate([x - gib_b/2, blade[1] - g * 0.01, edge - up * 0.01]) rotate([90, 0, 90]) linear_extrude(gib_b)
+      scale([g, up]) fillet2d(fillet_r);
 }
