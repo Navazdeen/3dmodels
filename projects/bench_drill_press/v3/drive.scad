@@ -6,9 +6,8 @@ module at_shaft(p) { translate([0, pinion_axis[0], pinion_axis[1]]) rotate([shaf
 module hex_x(af, x0, x1) { translate([x0, 0, 0]) rotate([0, 90, 0]) rotate(30) cylinder(d = af / cos(30), h = x1 - x0, $fn = 6); }
 
 module xcyl(d, x0, x1) { translate([x0, 0, 0]) rotate([0, 90, 0]) cylinder(d = d, h = x1 - x0, $fn = 48); }
-module dogs(x0, x1, w) { for (a = [0:360/dog[1]:359]) rotate([a, 0, 0]) translate([x0, -w/2, sleeve_id/2 - 0.01]) cube([x1 - x0, w, sleeve_od/2 - sleeve_id/2 + 0.01]); }
 
-// gear cluster: spring pinion (x -18..-6) + spacer + main pinion (-5..5) on the fixed M6; 4 dog slots in the +x face
+// gear cluster: spring pinion (x -18..-6) + spacer + main pinion (-5..5) on the fixed M6; hex socket in the +x face
 module gear_cluster() {
   at_shaft(plunge) difference() {
     union() {
@@ -18,7 +17,7 @@ module gear_cluster() {
       rotate([0, 90, 0]) rotate(gear_phase) spur_gear(mod = pin_m, teeth = pin_t, thickness = pin_w, pressure_angle = pa, shaft_diam = 0);
     }
     xcyl(sleeve_id, slider_x - spr_b/2 - 1, pin_w/2 + 1);                                   // runs on the M6
-    dogs(pin_w/2 - dog[2] - 0.3, pin_w/2 + 1, dog[0] + 0.3);                                 // dog slots
+    hex_x(hex_af + hex_c, pin_w/2 - hex_len - 0.3, pin_w/2 + 1);                                // drive socket
     translate([pin_w/2 + 0.01, 0, 0]) rotate([0, -90, 0]) difference() {                     // bed-face chamfer (+x face)
       cylinder(r = pin_r + pin_m + 1, h = ef + 0.01, $fn = 64);
       translate([0, 0, -0.01]) cylinder(r1 = pin_r + pin_m - ef, r2 = pin_r + pin_m + 0.02, h = ef + 0.03, $fn = 64);
@@ -51,17 +50,17 @@ module spring_slider() {
   }
 }
 
-module handle_hub() {   // hub + spokes + round drive sleeve through the +x boss; dogs drive the cluster. Bolt head holds it on.
+module handle_hub() {   // hub + spokes + round sleeve journals in the +x boss; its hex end drives the cluster. Bolt head holds it on.
   at_shaft(plunge) difference() {
     union() {
       translate([hub_x[0], 0, 0]) rotate([0, 90, 0]) cylinder(d = 26, h = hub_x[1] - hub_x[0], $fn = 64);
       xcyl(sleeve_od, pin_w/2 + 0.2, hub_x[0] + 0.01);                                        // drive sleeve (journal in the +x boss)
-      dogs(pin_w/2 + 0.2 - dog[2], pin_w/2 + 0.21, dog[0]);                                   // 4 dogs into the cluster's slots
+      hex_x(hex_af, pin_w/2 - hex_len, pin_w/2 + 0.21);                                       // hex into the cluster's socket
       for (a = [0, 120, 240]) rotate([a, 0, 0]) translate([hub_x[0] + 4, 0, 0]) rotate([0, 90, 0]) linear_extrude(hub_x[1] - hub_x[0] - 4)   // spokes on the bed side
         hull() { circle(d = 16, $fn = 32); translate([-spoke_r, 0]) circle(d = 7, $fn = 24); }   // tapered root
       for (a = [0, 120, 240]) rotate([a, 0, 0]) translate([hub_x[0], 0, spoke_r]) rotate([0, 90, 0]) cylinder(d = 14, h = hub_x[1] - hub_x[0], $fn = 32);
     }
-    xcyl(sleeve_id, pin_w/2 - dog[2] - 1, hub_x[1] + 1);                                       // on the M6
+    xcyl(sleeve_id, pin_w/2 - hex_len - 1, hub_x[1] + 1);                                       // on the M6
   }
 }
 

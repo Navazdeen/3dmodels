@@ -14,7 +14,7 @@ Interactive 3D viewer: `drill_press_v3.html`. You can pull it apart, cut through
 | Frame | One 248 mm C-frame, about a 20 h print, bending load across the layers | **Base + column + rear cover + top arm**. Each prints in the orientation its load wants; the tallest print is 70 mm (the head) |
 | Joints | none | Keyed pockets (0.2 mm clearance) locate the parts, M5s only clamp, so the rods stay parallel without hand-fitting |
 | Pinion shaft | Printed, twisting across its layers (about 11 MPa) | **Fixed M6 × 100 bolt**. The gear cluster and handle spin on its smooth shank |
-| Torque path | Printed hex shaft | Handle sleeve (Ø11.6 through the +x wall) with **3 dogs** into the cluster |
+| Torque path | Printed hex shaft | Handle sleeve (Ø11.6 journal in the +x wall) ending in a **9.8 mm hex** that fits an 8 mm-deep socket in the cluster |
 | Depth stop | Ring on the shaft | **Split collar on the left rod** + 0–40 mm scale on the column + pointer fin on the head |
 | Printed parts | 9 | **11** (+ test coupon) |
 | Screws | 9 | **15** (all M3–M6 from your stock) |
@@ -59,13 +59,13 @@ Orientations are already applied in the STLs in `stl/`.
 |---|---|---|---|---|
 | Base | Flat, as used | 35 | Plate bending lies along the layers | 4 walls, 25 % |
 | Column (U-channel) | **Front face down** | 31 | The drilling reaction bends it along its 219 mm length, which now runs along the layers. The side walls print vertical, so the axle bosses are solid walls and the bores are true circles. **219 mm long on a 220 mm bed: place it diagonally, no brim** | 4 walls, 30 % |
-| Rear cover | Flat, inner face up | 12 | Thin plate; the slider-guide ribs grow straight up | 3 walls, 20 % |
+| Rear cover | Flat, inner face up | 12 | Thin plate; the slider-guide ribs (both sides of the slider, and one right behind it at the mesh) grow straight up | 3 walls, 20 % |
 | Top arm | Upside down (top face on the bed) | 35 | Plate; the skirt grows up from it, no 45° undersides | 4 walls, 30 % |
 | Head | Upright | 70 | Unchanged from v3; the rack teeth print like a thread. The pointer fin has a 45° underside | 5 walls, 40 % |
 | Gear cluster | Main pinion face down | 23 | Gears print flat: tooth bending lies along the layers | 100 % |
 | Spring slider | On its side | 13 | Rack teeth along the layers | 100 % |
-| Handle (3 spokes) | Spokes flat, sleeve up (y90) | 61 | Spoke bending lies along the layers. The sleeve's twist does shear the layer bonds: about 6.4 MPa at 30 N on a spoke (accepted, about 2× margin [Likely]) | 4 walls, 40 %; 100 % for the sleeve if your slicer allows modifiers |
-| Depth-stop collar | Flat, as used | 12 | Clamp ring bends in its own plane, along the layers. The M5 hole is a teardrop | 100 % |
+| Handle (3 spokes) | Spokes flat, sleeve up (y90) | 65 | Spoke bending lies along the layers. Twist does shear the layer bonds: 6.4 MPa in the round sleeve and **9.7 MPa in the hex end** at 30 N on a spoke (about 2× margin [Likely]). The hex flats carry the torque in bearing (5.4 MPa), along the layers | 4 walls, 40 %; 100 % for the sleeve if your slicer allows modifiers |
+| Depth-stop collar | Flat, as used | 16 | Clamp ring bends in its own plane, along the layers. The M5 hole is a teardrop | 100 % |
 | 555 sleeve / iron sleeve | Upside down (tabs on the bed) | 32 | As v3. The iron sleeve is PLA: treat it as replaceable | 4 walls, 40 % |
 
 ## Hardware
@@ -103,14 +103,14 @@ Checked against the model: every nut is reachable when it's fitted, and no part 
    - Move it forward until the main pinion meshes the head's rack, and line its bore up with the bosses.
    - Do this **before** the slider: the slider sits behind the spring pinion and would block the way.
 6. **Handle + axle.**
-   - Push the handle's sleeve through the +x bore and turn it until its 3 dogs drop into the cluster's slots.
+   - Push the handle's sleeve through the +x bore; turn it until its hex end slides into the cluster's hex socket.
    - Push the M6 × 100 in from +x through the handle, cluster and −x boss.
    - At −x, run the nut on finger-tight, then lock the jam nut against it. Nothing that turns should be clamped.
 7. **Slider + spring.**
    - Hook the spring's lower hook through the post's hole.
    - Push the **spring slider** forward onto the spring pinion with its tab resting on the ledge (the top stop).
    - Hook the spring's upper hook into the slider's cross-hole. That takes about 11 mm of stretch, roughly 32 N, so use long-nose pliers or a wire loop.
-8. **Rear cover.** Drop it in from above, down the column's back and into the base pocket. Its ribs pass either side of the slider and brush the spring by about 1 mm (the spring gives).
+8. **Rear cover.** Drop it in from above, down the column's back and into the base pocket. Its side ribs pass either side of the slider (about 0.6 mm from the spring), and the back rib slides down 0.3 mm behind the slider. That back rib keeps the gear teeth from pushing the slider out of mesh.
 9. **Top arm.**
    - Lower it over the column top, cover and rod tops.
    - Fit 2 × M5 × 16 from outside into the captive nuts.
@@ -122,8 +122,8 @@ Checked against the model: every nut is reachable when it's fitted, and no part 
 
 - The collar is a C-ring with a thin back that acts as a hinge, so the M5 squeezes the rod through a lever (24 / 9 = 2.7×).
 - Sustained M5 preload is limited by PLA creep under the screw head: about 400 N at 12 MPa.
-- That gives about **630 N of friction hold, against 171 N of rack force** at 30 N on the 60 mm spoke, so 3.7× (asserted ≥ 3×). [Likely: the hinge factor assumes the back flexes.]
-- With no hinge action, the hold falls to about 240 N, still 1.4× a hard 30 N shove. **Re-tighten the collar after the first day**: PLA relaxes.
+- That gives about **630 N of friction hold, against 171 N of rack force** at 30 N on the 60 mm spoke, so 3.7× (asserted ≥ 3×). [Likely: the hinge factor assumes the back flexes. The 16 mm height keeps the hinge ligament at 8.5 MPa, under the creep limit.]
+- With no hinge action, the hold falls to about 240 N, still 1.4× a hard 30 N shove. **Test it before you trust it:** clamp the printed collar on a spare rod offcut, hang 20 kg (about 200 N) from it, and see that it doesn't slip. **Re-tighten the collar after the first day**: PLA relaxes.
 
 ## Tuning
 
@@ -135,11 +135,12 @@ Checked against the model: every nut is reachable when it's fitted, and no part 
 ## Numbers the model checks (`check.sh`, all 7 poses × tools)
 
 - Joint keys seated: column~base, arm~column, cover~column all touch. Bolt heads seat on the collar and skirt; the arm nuts sit in their pockets (≤ 0.2 mm).
+- The handle passes the +x bore on the way in: its hex corners are at r 5.66 and the bore is r 5.84 (asserted, as clash checks only test the final pose).
 - No bolt passes through a part. Modelling the bolts caught the base's rear bolt running through the spring post, so it moved to y 94.5.
 - The cover's insertion path misses the arm nut pockets (asserted in plan view).
 - Bearing pressure on the M6 ≤ 5 MPa. Handle sleeve shear ≤ 8 MPa. Cluster core shear ≤ 8 MPa.
 - Column bending at 50 N drilling force: **2.8 MPa**, open U only, cover ignored.
-- Depth collar: touches the head at full plunge and is ≥ 1 mm clear in every other pose. Its jaw pressure on the rod is 11 MPa (≤ 12).
+- Depth collar: touches the head at full plunge and is ≥ 1 mm clear in every other pose. Its jaw pressure on the rod is 8.2 MPa (≤ 12), and its hinge ligament carries 8.5 MPa (≤ 10).
 - 11 printed parts, 15 screws.
 
 ## Print-rule audit (2026-11-15, v3.1)
@@ -154,14 +155,14 @@ Checked against the vendored skills (`common/skills/3d-print-designer`, `common/
 - **Load along the layers.**
   - Column bending runs along its length.
   - Gear teeth, the handle spokes and the collar ring all print flat.
-  - The axle is steel now. The one printed part loaded in twist is the handle sleeve: about 6.4 MPa of interlayer shear, see the print list.
+  - The axle is steel now. The one printed part loaded in twist is the handle sleeve: 6.4–9.7 MPa of interlayer shear, see the print list.
 - **Fillets:** as v3. They are at the gib blade roots, the ring neck, the clamp-ear gussets, the slider tab and the handle spokes.
 - **0.4 mm elephant-foot chamfers:** as v3, plus the collar bore.
 - **Holes:** modelled at exact ISO fits (OpenSCAD skill rule). Horizontal holes are teardrops pointing up in each part's print orientation. Turn on hole/XY compensation in your slicer.
 
 Known validator flags, all reviewed and accepted:
 - **Column:** 0.4 mm ridges between the 1 mm-pitch scale grooves (cosmetic).
-- **Gear cluster:** module-1 tooth tips, and the tapering edges where the dog slots meet the bore.
+- **Gear cluster:** module-1 tooth tips.
 - **Sleeves:** split corners where they leave a curved surface.
 - **Top arm:** knife edges where the rod holes exit.
 - **Base and arm:** elephant-foot chamfers on the bed.

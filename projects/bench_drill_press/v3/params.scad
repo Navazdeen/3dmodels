@@ -230,7 +230,8 @@ ledge_x1 = min(ledge[1] - 0.3, slider_x - ks_od/2 - 0.5);   // ledge stops short
 axle_d = 6; axle_len = 100;             // M6 x 100 partly threaded (owner stock), fixed: head at +x, nut + jam nut at -x
 boss_len = 5.7;                         // bearing length of each column boss (wall + inward boss; cluster/sleeve 0.3 clear)
 sleeve_od = 11.6; sleeve_id = axle_d + 0.3;   // handle's round drive sleeve (through the +x boss)
-dog = [4.5, 3, 3.8];                    // drive dogs: tangential width, count, axial length
+hex_af = 9.8; hex_len = 8;              // handle-to-cluster drive: hex on the sleeve end (passes the +x bore), socket in the cluster
+hex_c = 0.3;                            // socket clearance on the across-flats
 F_bear = 150;                           // N: worst radial load on one boss (rack + spring)
 function bearing_p() = F_bear / (axle_d * boss_len);
 function tube_shear(T, D, d) = 16 * T * D / (PI * (pow(D, 4) - pow(d, 4)));
@@ -238,11 +239,11 @@ assert(bearing_p() <= 5, str("bearing pressure on the M6 ", bearing_p(), " MPa")
 assert(tube_shear(T_stop, sleeve_od, sleeve_id) <= 8, "handle sleeve torsion");
 assert(axle_len >= 100, "axle length");
 assert(tube_shear(ks_force(travel_len) * spr_r, spr_root_d, sleeve_id) <= 8, "cluster core between the pinions (spring torque)");
-assert(pin_m * (pin_t - 2.5) / 2 - sleeve_od / 2 >= 2, "dog slots clear the main pinion root by 2 mm");
+assert(pin_m * (pin_t - 2.5) / 2 - (hex_af + hex_c) / cos(30) / 2 >= 2, "hex socket corners clear the main pinion root by 2 mm");
 
 // ===== v3.1 depth collar + scale (plan_v3_1 Task 3) =====
 // Split C-collar on the left rod: slit to the front, M5 across the front ears, thin back acts as the hinge.
-collar_h = 12; collar_d = 18;           // body Ø (5 mm wall round the rod)
+collar_h = 16; collar_d = 18;           // body Ø (5 mm wall round the rod)
 collar_bore = rod_d + 0.3;              // slides on when loose; the M5 closes the slit
 collar_slit = 2; collar_bolt_dy = 15;   // M5 axis in front of the rod axis
 collar_ear = [16, collar_bolt_dy + m5_head[0]/2 + 1.5];   // ears: x width, reach in front of the rod axis (-y); 1.5 mm skin past the head
@@ -279,3 +280,25 @@ assert(col_bend_stress(50) <= 10, str("column bending ", col_bend_stress(50), " 
 top_bolt_y = [bolt_y[0]];              // arm joint: front bolt only per side (a rear pocket would block the cover's ribs)
 nut_block_y1 = top_bolt_y[0] + nut_pocket[0]/2 + 1.6;   // rear end of the captive-nut blocks inside the column top
 assert(nut_block_y1 <= slider_back + 0.3 - 0.5, str("cover ribs hit the nut blocks while sliding in: block to y ", nut_block_y1, ", ribs from ", slider_back + 0.3));
+
+// ===== final-review fix pass: tests =====
+// R1 handle must pass the +x bore on the way in (only the final pose was clash-checked)
+handle_in_r = hex_af / cos(30) / 2;     // widest point of the handle that goes through the bore (hex corners)
+assert(handle_in_r <= bore_px/2 - 0.1, str("handle can't pass the +x bore: r ", handle_in_r, " vs bore r ", bore_px/2));
+// R3 coupling stress at 30 N on the spoke. Hex: flats in bearing (along the layers) and the hollow hex in torsion
+// (layer-plane shear, the one stress across layers). Hex torsion J ~ 0.1154 s^4 (Roark), minus the bore.
+hex_torsion = T_stop * (hex_af/2) / (0.1154 * pow(hex_af, 4) - PI * pow(sleeve_id, 4) / 32);
+hex_bearing = 2 * T_stop / (6 * (hex_af / sqrt(3) / 2) * hex_len * (hex_af / 2));   // load on the outer half of each flat
+coupling_stress = max(hex_torsion, hex_bearing);
+assert(coupling_stress <= 12, str("handle-to-cluster coupling ", coupling_stress, " MPa"));
+// I4 collar hinge ligament (the lever needs it to carry (lever-1) x clamp in sustained tension)
+collar_lig_stress = (collar_lever - 1) * clamp_n / ((collar_d - collar_bore)/2 * collar_h);
+assert(collar_lig_stress <= 10, str("collar hinge ligament ", collar_lig_stress, " MPa (creep)"));
+// I7 main pinion tip vs the pinion window edge in the front wall (bolt play up to 0.25 mm)
+win_hh = 12.5;                          // pinion window half-height in the front wall
+assert(win_hh >= sqrt(pow(pin_m * (pin_t + 2) / 2, 2) - pow(pinion_axis[0] - col[2] - wall, 2)) + 1, "pinion tip clears the window edge by 1 mm");
+
+// C2 the spring slider needs a guide straight behind it at the mesh height (the 30° teeth push it back 18-45 N)
+slider_rib = [slider_z0_up + slider_dz(travel_len) + 6, pinion_axis[1] + 12];   // z: above the spring's top hook at full plunge
+assert(slider_rib[0] <= pinion_axis[1] - 6 && slider_rib[1] >= pinion_axis[1] + 6, "rear rib covers the spring-pinion mesh");
+assert(slider_rib[0] >= slider_z0_up + slider_dz(travel_len) + 4 - slider_hook_d/2 + 1, "rear rib clears the spring top");

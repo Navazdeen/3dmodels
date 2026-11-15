@@ -86,7 +86,7 @@ module column() {   // U-channel, printed front face down (+y up)
       nut_block(col_top - cjoint[1] / 2);
       translate([col[0] + wall - 0.01, col[2] + wall - 0.01, slider_z0_up + tab_dz - 6]) cube([ledge_x1 - (col[0] + wall) + 0.01, ledge[3] - col[2] - wall + 0.01, 6]);
     }
-    for (win = [[pin_w + 4, 11], [col[1] - col[0] - 2 * boss_len, 7]]) let(w = win[0], hh = win[1])   // pinion window + gear slot (stops at the bosses)
+    for (win = [[pin_w + 4, win_hh], [col[1] - col[0] - 2 * boss_len, 7]]) let(w = win[0], hh = win[1])   // pinion window + gear slot (stops at the bosses)
       translate([-w/2, col[2] - 1, pinion_axis[1] - hh]) cube([w, wall + 2, 2 * hh]);
     tear_xd(shaft_bore, col[0] - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);   // teardrop tips toward +y (print up)
     tear_xd(bore_px, col[1] - boss_len - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);
@@ -112,6 +112,8 @@ module rear_cover() {   // closes the U into a box; carries the slider's rear gu
       let(gz0 = slider_z0_up + 6, gz1 = pinion_axis[1] + 10, gy = slider_back + 0.3)
         for (g = [[slider_x + slider_w/2 + 0.3, col[1] - wall - 0.3], [col[0] + wall + 0.3, slider_x - slider_w/2 - 0.3]])
           translate([g[0], gy, gz0]) cube([g[1] - g[0], col[3] - gy + 0.01, gz1 - gz0]);
+      // rib straight behind the slider at the mesh height: the 30° teeth push the slider back
+      translate([slider_x - slider_w/2 - 0.31, slider_back + 0.3, slider_rib[0]]) cube([slider_w + 0.62, col[3] - slider_back - 0.3 + 0.01, slider_rib[1] - slider_rib[0]]);
     }
   }
 }

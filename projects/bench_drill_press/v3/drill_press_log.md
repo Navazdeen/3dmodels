@@ -45,3 +45,19 @@ Run:
 
 **Prints and feedback:** (what the user reported about this version)
 
+
+### drill_press_v3 - 2026-11-15 05:30 (rev 405b8d5)
+
+**Changed:** v3.1 final-review fixes: handle drives the cluster through a 9.8 hex (passes the +x bore; dogs did not), rear rib behind the spring slider at the mesh, depth collar 16 tall (hinge ligament 8.5 MPa), pinion window half-height 12.5
+
+Run:
+- [up] report: frame h 248 | column bending MPa @50 N 2.807 | printed / screws [11,15] | depth collar hold N / 3x rack [633.345,514.286] | rod cut length 245 | pinion axis [76.5,133] | gib k / gap / stress [3.84,0.911,13.125] | tip moment 5 N / 50 N [54.83,3024.83] | spring N top/bottom [32.08,77.795] | return torque / need [192.483,153.986] | tool / s / tip [775,10,40]
+- [mid] report: frame h 248 | column bending MPa @50 N 2.807 | printed / screws [11,15] | depth collar hold N / 3x rack [633.345,514.286] | rod cut length 245 | pinion axis [76.5,133] | gib k / gap / stress [3.84,0.911,13.125] | tip moment 5 N / 50 N [54.83,3024.83] | spring N top/bottom [32.08,77.795] | return torque / need [192.483,153.986] | tool / s / tip [775,10.75,19.25]
+- [down] report: frame h 248 | column bending MPa @50 N 2.807 | printed / screws [11,15] | depth collar hold N / 3x rack [633.345,514.286] | rod cut length 245 | pinion axis [76.5,133] | gib k / gap / stress [3.84,0.911,13.125] | tip moment 5 N / 50 N [54.83,3024.83] | spring N top/bottom [32.08,77.795] | return torque / need [192.483,153.986] | tool / s / tip [775,11.5,-1.5]
+- [up_555] report: frame h 248 | column bending MPa @50 N 2.807 | printed / screws [11,15] | depth collar hold N / 3x rack [633.345,514.286] | rod cut length 245 | pinion axis [76.5,133] | gib k / gap / stress [3.84,0.911,13.125] | tip moment 5 N / 50 N [54.83,3024.83] | spring N top/bottom [32.08,77.795] | return torque / need [192.483,153.986] | tool / s / tip [555,10,40]
+- [down_555] report: frame h 248 | column bending MPa @50 N 2.807 | printed / screws [11,15] | depth collar hold N / 3x rack [633.345,514.286] | rod cut length 245 | pinion axis [76.5,133] | gib k / gap / stress [3.84,0.911,13.125] | tip moment 5 N / 50 N [54.83,3024.83] | spring N top/bottom [32.08,77.795] | return torque / need [192.483,153.986] | tool / s / tip [555,11.5,-1.5]
+- [up_iron] report: frame h 248 | column bending MPa @50 N 2.807 | printed / screws [11,15] | depth collar hold N / 3x rack [633.345,514.286] | rod cut length 245 | pinion axis [76.5,133] | gib k / gap / stress [3.84,0.911,13.125] | tip moment 5 N / 50 N [54.83,3024.83] | spring N top/bottom [32.08,77.795] | return torque / need [192.483,153.986] | tool / s / tip [iron,3,40]
+- [down_iron] report: frame h 248 | column bending MPa @50 N 2.807 | printed / screws [11,15] | depth collar hold N / 3x rack [633.345,514.286] | rod cut length 245 | pinion axis [76.5,133] | gib k / gap / stress [3.84,0.911,13.125] | tip moment 5 N / 50 N [54.83,3024.83] | spring N top/bottom [32.08,77.795] | return torque / need [192.483,153.986] | tool / s / tip [iron,4.5,-1.5]
+
+**Prints and feedback:** (what the user reported about this version)
+
