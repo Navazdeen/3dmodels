@@ -6,34 +6,23 @@ module at_shaft(p) { translate([0, pinion_axis[0], pinion_axis[1]]) rotate([shaf
 module hex_x(af, x0, x1) { translate([x0, 0, 0]) rotate([0, 90, 0]) rotate(30) cylinder(d = af / cos(30), h = x1 - x0, $fn = 6); }
 
 module xcyl(d, x0, x1) { translate([x0, 0, 0]) rotate([0, 90, 0]) cylinder(d = d, h = x1 - x0, $fn = 48); }
-// shaft goes in from -x: every section +x of the collar passes the -x bore; +x of the main pinion passes its hex
-module shaft() {
-  c0 = col[0] - collar[1]; cone = (collar[0] - shaft_d) / 2; sp = [slider_x - spr_b/2, slider_x + spr_b/2];
-  at_shaft(plunge) {
-    xcyl(shaft_d, shaft_x[0] + ef, c0 - cone + 0.01);                                             // stop section
-    translate([shaft_x[0], 0, 0]) rotate([0, 90, 0]) cylinder(d1 = shaft_d - 2*ef, d2 = shaft_d, h = ef + 0.01, $fn = 48);   // bed-end chamfer
-    translate([c0 - cone, 0, 0]) rotate([0, 90, 0]) cylinder(d1 = shaft_d, d2 = collar[0], h = cone + 0.01, $fn = 48);  // 45° under the collar
-    xcyl(collar[0], c0, col[0]);                                                                   // collar (bears on the -x wall)
-    xcyl(shaft_d, col[0], sp[0] + 0.01);                                                           // -x journal + spacer
-    translate([slider_x, 0, 0]) rotate([0, 90, 0]) rotate(spr_phase)
-      spur_gear(mod = spr_m, teeth = spr_t, thickness = spr_b, pressure_angle = pa, shaft_diam = 0);   // spring pinion (core Ø9.5)
-    xcyl(shaft_d, sp[1] - 0.01, -pin_w/2 - 0.5);                                                   // spacer up to the main pinion
-    hex_x(shaft_hex, -pin_w/2 - 0.5 - 0.01, pin_w/2 + 0.5);                                         // main pinion seat
-    xcyl(journal_px, pin_w/2 + 0.5 - 0.01, hub_x[0] - 0.5);                                         // +x journal Ø9.7
-    hex_x(hub_hex, hub_x[0] - 0.6, hub_x[1]);                                                       // handle seat
-  }
-}
+module dogs(x0, x1, w) { for (a = [0:360/dog[1]:359]) rotate([a, 0, 0]) translate([x0, -w/2, sleeve_id/2 - 0.01]) cube([x1 - x0, w, sleeve_od/2 - sleeve_id/2 + 0.01]); }
 
-module gear_pair() {   // main pinion on the hex
+// gear cluster: spring pinion (x -18..-6) + spacer + main pinion (-5..5) on the fixed M6; 4 dog slots in the +x face
+module gear_cluster() {
   at_shaft(plunge) difference() {
-    rotate([0, 90, 0]) rotate(gear_phase) spur_gear(mod = pin_m, teeth = pin_t, thickness = pin_w, pressure_angle = pa, shaft_diam = 0);
-    hex_x(shaft_hex + 0.25, -pin_w/2 - 1, pin_w/2 + 1);
-    // printed +x face down (y90): 0.4 mm chamfer on the tooth tips and the hex entry at that face
-    translate([pin_w/2, 0, 0]) rotate([0, -90, 0]) difference() {
+    union() {
+      translate([slider_x, 0, 0]) rotate([0, 90, 0]) rotate(spr_phase)
+        spur_gear(mod = spr_m, teeth = spr_t, thickness = spr_b, pressure_angle = pa, shaft_diam = 0);
+      xcyl(14, slider_x + spr_b/2 - 0.01, -pin_w/2 + 0.01);
+      rotate([0, 90, 0]) rotate(gear_phase) spur_gear(mod = pin_m, teeth = pin_t, thickness = pin_w, pressure_angle = pa, shaft_diam = 0);
+    }
+    xcyl(sleeve_id, slider_x - spr_b/2 - 1, pin_w/2 + 1);                                   // runs on the M6
+    dogs(pin_w/2 - dog[2] - 0.3, pin_w/2 + 1, dog[0] + 0.3);                                 // dog slots
+    translate([pin_w/2 + 0.01, 0, 0]) rotate([0, -90, 0]) difference() {                     // bed-face chamfer (+x face)
       cylinder(r = pin_r + pin_m + 1, h = ef + 0.01, $fn = 64);
       translate([0, 0, -0.01]) cylinder(r1 = pin_r + pin_m - ef, r2 = pin_r + pin_m + 0.02, h = ef + 0.03, $fn = 64);
     }
-    translate([pin_w/2 + 0.01, 0, 0]) rotate([0, -90, 0]) cylinder(d1 = (shaft_hex + 0.25)/cos(30) + 2*ef, d2 = (shaft_hex + 0.25)/cos(30), h = ef, $fn = 6);
   }
 }
 
@@ -62,46 +51,17 @@ module spring_slider() {
   }
 }
 
-module handle_hub() {   // flat on the bed; its sleeve bears on the +x wall (holds the shaft against pulling out -x)
+module handle_hub() {   // hub + spokes + round drive sleeve through the +x boss; dogs drive the cluster. Bolt head holds it on.
   at_shaft(plunge) difference() {
     union() {
       translate([hub_x[0], 0, 0]) rotate([0, 90, 0]) cylinder(d = 26, h = hub_x[1] - hub_x[0], $fn = 64);
-      xcyl(journal_px + 5, col[1], hub_x[0] + 0.01);                                              // sleeve to the +x wall
+      xcyl(sleeve_od, pin_w/2 + 0.2, hub_x[0] + 0.01);                                        // drive sleeve (journal in the +x boss)
+      dogs(pin_w/2 + 0.2 - dog[2], pin_w/2 + 0.21, dog[0]);                                   // 4 dogs into the cluster's slots
       for (a = [0, 120, 240]) rotate([a, 0, 0]) translate([hub_x[0] + 4, 0, 0]) rotate([0, 90, 0]) linear_extrude(hub_x[1] - hub_x[0] - 4)   // spokes on the bed side
         hull() { circle(d = 16, $fn = 32); translate([-spoke_r, 0]) circle(d = 7, $fn = 24); }   // tapered root
       for (a = [0, 120, 240]) rotate([a, 0, 0]) translate([hub_x[0], 0, spoke_r]) rotate([0, 90, 0]) cylinder(d = 14, h = hub_x[1] - hub_x[0], $fn = 32);
     }
-    hex_x(hub_hex + 0.15, hub_x[0] - 0.01, hub_x[1] + 1);                                        // press fit on the hex
-    translate([hub_x[1] + 0.01, 0, 0]) rotate([0, -90, 0]) rotate(30) cylinder(d1 = (hub_hex + 0.15)/cos(30) + 2*ef, d2 = (hub_hex + 0.15)/cos(30), h = ef, $fn = 6);   // bed-side lead-in
-    xcyl(journal_px + 0.15, col[1] - 1, hub_x[0] + 0.02);                                         // sleeve bore
+    xcyl(sleeve_id, pin_w/2 - dog[2] - 1, hub_x[1] + 1);                                       // on the M6
   }
 }
 
-// tooth angle at full plunge: just touching the pin (approaching as the head drops)
-R_lug = norm(lug_off);
-stop_tang = asin((2.5 + lug_pin_d/2) / R_lug);
-stop_contact_deg = atan2(lug_off[0], lug_off[1]) + stop_tang;
-split_deg = (tick_dir * (stop_tang + travel_len / pin_r * 180 / PI) + 360) / 2 - 180;   // rotate the -z split to the middle of the unused arc (tooth at 0, ticks 22..240°)
-function tick_angle(i) = tick_dir * (stop_tang + i / pin_r * 180 / PI);   // tick i sits on the pin at the top when the stop is set to i mm
-module stop_ring() {
-  w = stop_x[1] - stop_x[0];
-  at_shaft(plunge) rotate([-shaft_rot(travel_len) - stop_contact_deg, 0, 0]) difference() {
-    union() {
-      xcyl(2 * stop_ring_r, stop_x[0], stop_x[1]);
-      translate([stop_x[0], -2.5, 0]) cube([w, 5, stop_tooth_r]);                                // stop tooth
-    }
-    for (i = [0:2:40]) rotate([tick_angle(i), 0, 0])                                             // 2 mm ticks, long every 10
-      translate([stop_x[0] - 0.01, -0.3, stop_ring_r - 0.6]) cube([i % 10 == 0 ? 5 : 2.5, 0.6, 1]);
-    xcyl(shaft_d + 0.15, stop_x[0] - 1, stop_x[1] + 1);
-    translate([stop_x[0] - 0.01, 0, 0]) rotate([0, 90, 0]) cylinder(d1 = shaft_d + 0.15 + 2*ef, d2 = shaft_d + 0.15, h = ef, $fn = 48);   // bed-side lead-in
-    rotate([split_deg, 0, 0]) {                                                                 // split + clamps on the arc the scale doesn't use
-    translate([stop_x[0] - 1, -0.75, -stop_ring_r - 1]) cube([w + 2, 1.5, stop_ring_r - shaft_d/2 + 1.1]);   // clamp split
-    let(zc = -(shaft_d/2 + stop_ring_r)/2, ch = sqrt(stop_ring_r^2 - zc^2))                         // 2 tangential M3 clamps
-      for (xc = [stop_x[0] + w/4, stop_x[1] - w/4]) translate([xc, 0, zc]) rotate([-90, 0, 0]) {
-        translate([0, 0, -ch - 1]) cylinder(d = 6, h = ch - 2.5 + 1, $fn = 24);
-        translate([0, 0, -3]) cylinder(d = m3_clear, h = 3.1, $fn = 16);
-        translate([0, 0, -0.1]) cylinder(d = 2.6, h = ch + 1.1, $fn = 16);
-      }
-    }
-  }
-}

@@ -13,11 +13,10 @@ parts = concat([
   ["rear_cover","Rear cover","PLA",[0,110,0],"print=x-90","group=frame"],
   ["top_arm","Top arm","PLA",[0,0,60],"print=x180","group=frame"],
   ["head","Head (slide + rack + 43 mm ring)","PLA",[0,-40,0],"print=auto"],
-  ["shaft","Pinion shaft","PLA",[0,0,0],"print=y-90"],
-  ["gear_pair","Main pinion","PLA",[0,30,0],"print=y90"],
+  ["gear_cluster","Gear cluster (main + spring pinion)","PLA",[0,40,0],"print=y90"],
+  ["hw_axle","M6x100 axle + nut + jam nut","",[-60,0,0],"flex=gear_cluster,handle_hub"],
   ["spring_slider","Spring slider","PLA",[0,40,0],"print=auto"],
   ["handle_hub","Handle (3 spokes)","PLA",[40,0,0],"print=y90"],
-  ["stop_ring","Depth-stop ring","PLA",[-40,0,0],"print=y-90"],
   ["hw_spring","Bike kickstand spring (UNVERIFIED)","",[0,40,0],"flex=spring_slider,base"],
   ["hw_rod","Rod Ø8","cut from one 500 mm rod",[0,0,0],"pieces=2","flex=head"]
 ], tool == "775" ? [["hw_motor","775 motor (UNVERIFIED size)","",[0,-60,0],"flex=head"], ["hw_chuck_bit","Chuck + bit"]]
@@ -25,8 +24,8 @@ parts = concat([
  : [["sleeve_iron","Iron sleeve (PLA, replaceable)","PLA",[0,-60,0],"print=x180","flex=head"], ["hw_iron_handle","Pen iron handle (UNVERIFIED)","",[0,-60,0],"flex=sleeve_iron"], ["hw_iron_hot","Iron hot zone"]]);
 checks = concat([ ["hw_rod","base","<=",0.05], ["hw_rod","top_arm","<=",0.05], ["column","base","touch"], ["top_arm","column","touch"], ["rear_cover","column","touch"],
   ["head","hw_rod","<=",0], ["head","frame",">=",1],
-  ["gear_pair","head","<=",0.3], ["shaft","spring_slider","<=",0.3], ["shaft","frame","<=",0.3],
-  ["spring_slider","frame","<=",0.5], ["handle_hub","head",">=",1], ["handle_hub","hw_rod",">=",2], ["handle_hub","frame","<=",0.05]], tool == "iron" ? [["sleeve_iron","hw_iron_hot",">=",iron_air_gap], ["frame","hw_iron_hot",">=",1], ["head","hw_iron_hot",">=",iron_air_gap], ["sleeve_iron","head","<=",0.3]]
+  ["gear_cluster","head","<=",0.3], ["gear_cluster","spring_slider","<=",0.3], ["handle_hub","gear_cluster","<=",0.3], ["gear_cluster","column",">=",0], ["gear_cluster","column","<=",0.5], ["hw_axle","column","<=",0.3],
+  ["spring_slider","frame","<=",0.5], ["handle_hub","head",">=",1], ["handle_hub","hw_rod",">=",2], ["handle_hub","column","<=",0.3]], tool == "iron" ? [["sleeve_iron","hw_iron_hot",">=",iron_air_gap], ["frame","hw_iron_hot",">=",1], ["head","hw_iron_hot",">=",iron_air_gap], ["sleeve_iron","head","<=",0.3]]
   : tool == "555" ? [["sleeve_555","head","<=",0.3], ["hw_chuck_bit","frame",">=",0]] : [["hw_motor","head","<=",0.6], ["hw_chuck_bit","frame",">=",0]],
   []);   // depth-stop check returns in Task 3 (rod collar)
 report = [ ["frame h", frame_h(), "column len", col_len], ["rod cut length", rod_len], ["pinion axis", pinion_axis], ["gib k / gap / stress", [gib_k, gib_gap, gib_stress()]], ["tip moment 5 N / 50 N", [tip_moment(5), tip_moment(50)]], ["spring N top/bottom", [ks_force(0), ks_force(travel_len)]], ["return torque / need", [ret_torque(0), (head_mass*9.81 + friction) * pin_r]], ["tool / s / tip", [tool, tool_s, tip_z(plunge, tool_s)]] ];
@@ -36,11 +35,10 @@ pick("column") column();
 pick("rear_cover") rear_cover();
 pick("top_arm") top_arm();
 pick("head") head();
-pick("shaft") shaft();
-pick("gear_pair") gear_pair();
+pick("gear_cluster") gear_cluster();
+pick("hw_axle") hw_axle();
 pick("spring_slider") spring_slider();
 pick("handle_hub") handle_hub();
-pick("stop_ring") stop_ring();
 pick("hw_spring") hw_spring();
 pick("hw_rod") hw_rods();
 pick("sleeve_555") sleeve_555();

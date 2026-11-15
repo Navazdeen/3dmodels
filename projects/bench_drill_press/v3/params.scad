@@ -43,8 +43,8 @@ arm_xh = 46;                            // top-arm half-width
 arm_c = head_z0_up + head_h + 1;        // 45° arm underside starts here at the column face
 shaft_d = 14.5;                         // printed shaft: -x journal, stop section, spacers (spring pinion tips Ø14 pass)
 journal_mx = shaft_d;
-shaft_bore = fit_mid("H9", shaft_d) + 0.05;    // -x wall (+0.05: facet clearance in the model)
-bore_px = fit_mid("H9", 9.7) + 0.05;           // +x wall
+shaft_bore = fit_mid("H9", 6) + 0.05;   // -x boss: the fixed M6 axle (+0.05 facet clearance)
+bore_px = fit_mid("H9", 11.6) + 0.05;   // +x boss: the handle's Ø11.6 drive sleeve
 m3_clear = 3.4; m3_insert = [4.0, 5.0]; // UNVERIFIED insert size
 m5_clear = 5.5; m5_insert = [6.4, 8.0];
 
@@ -136,7 +136,6 @@ assert(ks_anchor_z > wall, "spring anchor above the column floor");
 assert(rack_len >= travel_len + 4 + pin_r, str("rack too short: ", rack_len));
 assert(gear_stress(ks_force(travel_len), spr_m, spr_b) <= 25, str("spring pinion tooth stress ", gear_stress(ks_force(travel_len), spr_m, spr_b)));
 assert(gear_stress(ks_force(travel_len) * spr_r / pin_r + 50, pin_m, pin_w) <= 25, "main pinion tooth stress");
-assert(2 * PI * pin_r >= travel_len, "stop ring one turn covers the travel");
 assert(n_printed <= 10 && n_screws <= 9, "part / screw budget (stop ring has 2 clamp screws)");
 spring_y = (pinion_axis[0] + spr_r + 1.25 * spr_m + slider_back) / 2;   // spring axis y: under the slider's hook hole
 ledge = [slider_x - slider_w/2 - 3, slider_x - slider_w/2, pinion_axis[0] + spr_r + 1.25 * spr_m, pinion_axis[0] + spr_r + 1.25 * spr_m + 5];   // tab x0,x1,y0,y1 (outboard -x side, 3 x 5)
@@ -144,9 +143,7 @@ ledge = [slider_x - slider_w/2 - 3, slider_x - slider_w/2, pinion_axis[0] + spr_
 function _gap_z(z0, p) = z0 + (round((pinion_axis[1] - z0) / p - 0.5) + 0.5) * p;
 gear_phase = -(_gap_z(head_z0_up + rack_z0, PI * pin_m) - pinion_axis[1]) / pin_r * 180 / PI;
 spr_phase = (_gap_z(slider_z0_up + 2, PI * spr_m) - pinion_axis[1]) / spr_r * 180 / PI;
-assert(spr_m * (spr_t + 2) < shaft_d, "integral spring pinion must pass the -x bore");
 assert(pin_m * (pin_t - 2.5) > shaft_hex / cos(30) + 3, "main pinion root clears its hex bore");
-assert(hub_hex / cos(30) <= shaft_hex + 0.25 - 0.3, "handle hex passes the main pinion bore");
 
 // --- tools in the 43 mm ring (Task 4) ---
 m775_d = 42; m775_len = 67; m775_boss = [17.5, 4.5];   // UNVERIFIED
@@ -188,15 +185,11 @@ function cantilever(F, a, d) = 32 * F * a / (PI * pow(d, 3));
 function ring_arm_stress() = let(L = (ring_d/2 + ring_wall/2) * (ring_free_arc/2) * PI / 180)
   3 * E_pla * ring_wall * (PI * (ring_bore - m775_d) / 2) / (2 * L * L);
 assert(gib_eff_L == gib_L, str("gib bending length is ", gib_eff_L, ", stiffness assumes ", gib_L));
-assert(torsion(T_stop, spr_root_d) <= 12, str("spring-pinion core shear ", torsion(T_stop, spr_root_d), " MPa"));
-assert(journal_px <= shaft_hex - 0.3, "shaft can't be assembled: +x journal won't pass the main pinion's hex");
 anchor_a = slider_x - (col[0] + wall); anchor_b = (col[1] - wall) - slider_x;
 anchor_M = ks_force(travel_len) * anchor_a * anchor_b / (anchor_a + anchor_b);   // simply supported, N·mm
 assert(anchor_supported && 32 * anchor_M / (PI * pow(anchor_d, 3)) <= 15, str("spring anchor stress ", 32 * anchor_M / (PI * pow(anchor_d, 3))));
 assert(adj_front_y0 <= body_y0, "front gib adjusters unreachable");
 assert(slider_hook_d >= 3.5, "spring has nothing to hook on the slider");
-assert(tick_dir == 1, "depth scale reads backwards");
-assert(stop_screws * mu * 1000 * stop_r_shaft >= 1.2 * T_stop, "depth stop slips under hand force");
 assert(ring_arm_stress() <= 10, str("ring arm stress ", ring_arm_stress(), " MPa to grip the 775"));
 assert(tab_xy[0] >= 3 && tab_xy[1] >= 5, "top-stop tab too small");
 
@@ -205,8 +198,6 @@ fillet_r = 1.5;                         // inside-corner fillet at loaded roots
 ef = 0.4;                               // elephant-foot chamfer on bed-side fitting edges
 assert(fillet_r >= 1, "inside corners need >= 1 mm fillets (PLA is notch-sensitive)");
 assert(ef >= 0.3 && ef <= 0.5, "elephant-foot chamfer on bed-side fitting edges (PLA 0.3-0.4 mm)");
-assert(norm(lug_off) - lug_pin_d/2 - stop_ring_r >= 1, "stop pin clears the ring body");
-assert(stop_tooth_r > norm(lug_off), "tooth reaches past the pin centre");
 
 // ===== v3.1 frame split (plan_v3_1 Task 1) =====
 arm_t = 20;                             // top-arm plate thickness
@@ -223,3 +214,17 @@ assert(base_t <= 120 && col_print_h <= 120 && arm_t <= 120 && cover_t <= 120, "p
 assert(key_c <= 0.2, "joint key clearance");
 assert(cjoint[0] >= 5 && cjoint[1] >= 12, "collar/skirt must hold an M5 nut-and-bolt joint");
 ledge_x1 = min(ledge[1] - 0.3, slider_x - ks_od/2 - 0.5);   // ledge stops short of the spring envelope
+
+// ===== v3.1 fixed M6 axle (plan_v3_1 Task 2) =====
+axle_d = 6; axle_len = 100;             // M6 x 100 partly threaded (owner stock), fixed: head at +x, nut + jam nut at -x
+boss_len = 5.7;                         // bearing length of each column boss (wall + inward boss; cluster/sleeve 0.3 clear)
+sleeve_od = 11.6; sleeve_id = axle_d + 0.3;   // handle's round drive sleeve (through the +x boss)
+dog = [4.5, 3, 3.8];                    // drive dogs: tangential width, count, axial length
+F_bear = 150;                           // N: worst radial load on one boss (rack + spring)
+function bearing_p() = F_bear / (axle_d * boss_len);
+function tube_shear(T, D, d) = 16 * T * D / (PI * (pow(D, 4) - pow(d, 4)));
+assert(bearing_p() <= 5, str("bearing pressure on the M6 ", bearing_p(), " MPa"));
+assert(tube_shear(T_stop, sleeve_od, sleeve_id) <= 8, "handle sleeve torsion");
+assert(axle_len >= 100, "axle length");
+assert(tube_shear(ks_force(travel_len) * spr_r, spr_root_d, sleeve_id) <= 8, "cluster core between the pinions (spring torque)");
+assert(pin_m * (pin_t - 2.5) / 2 - sleeve_od / 2 >= 2, "dog slots clear the main pinion root by 2 mm");

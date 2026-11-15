@@ -57,27 +57,33 @@ module base() {
   }
 }
 
-module column() {
+module column() {   // U-channel, printed front face down (+y up)
   z0 = -key_d; z1 = col_top + key_d;
   difference() {
     union() {
-      column_block(z0, z1);
-      // bearing bosses round both bores (in the side walls; round: the column prints on its side, bores vertical)
-      intersection() {                                         // bosses stay behind the front face (it's the bed)
-        for (bx = [[col[0], col[0] + wall], [col[1] - wall, col[1]]]) let(r = (bx[0] < 0 ? shaft_bore : bore_px)/2 + 3)
-          translate([bx[0], pinion_axis[0], pinion_axis[1]]) rotate([0, 90, 0]) cylinder(r = r, h = bx[1] - bx[0], $fn = 48);
-        translate([col[0] - 1, col[2], -1000]) cube([col[1] - col[0] + 2, 1000, 2000]);
+      difference() {
+        column_block(z0, z1);
+        translate([col[0] + wall, col[2] + wall, z0 - 1]) cube([col[1] - col[0] - 2*wall, col[3] - col[2], z1 - z0 + 2]);   // open back
       }
+      // bearing bosses reach inward to boss_len; each blends into the front wall at 45° (no overhang face-down)
+      intersection() {
+        for (bx = [[col[0] + wall - 0.01, col[0] + boss_len], [col[1] - boss_len, col[1] - wall + 0.01]])
+          let(r = (bx[0] < 0 ? shaft_bore : bore_px)/2 / sin(40) + 1.6, dy = pinion_axis[0] - col[2] - wall)   // covers the teardrop tip
+          hull() {
+            translate([bx[0], pinion_axis[0], pinion_axis[1]]) rotate([0, 90, 0]) cylinder(r = r, h = bx[1] - bx[0], $fn = 48);
+            translate([bx[0], col[2] + wall - 0.01, pinion_axis[1] - r - dy]) cube([bx[1] - bx[0], 0.01, 2 * (r + dy)]);
+          }
+        translate([col[0] - 1, col[2], -1000]) cube([col[1] - col[0] + 2, 1000, 2000]);    // behind the front face (the bed)
+      }
+      // top-stop ledge under the slider's -x tab, down to the front wall
+      translate([col[0] + wall - 0.01, col[2] + wall - 0.01, slider_z0_up + tab_dz - 6]) cube([ledge_x1 - (col[0] + wall) + 0.01, ledge[3] - col[2] - wall + 0.01, 6]);
     }
-    translate([col[0] + wall, col[2] + wall, z0 - 1]) cube([col[1] - col[0] - 2*wall, col[3] - col[2], z1 - z0 + 2]);   // U-channel, open back
-    for (win = [[pin_w + 4, 11], [col[1] - col[0] - 2 * wall, 7]]) let(w = win[0], hh = win[1])          // pinion window + gear slot
+    for (win = [[pin_w + 4, 11], [col[1] - col[0] - 2 * boss_len, 7]]) let(w = win[0], hh = win[1])   // pinion window + gear slot (stops at the bosses)
       translate([-w/2, col[2] - 1, pinion_axis[1] - hh]) cube([w, wall + 2, 2 * hh]);
-    tear_xd(shaft_bore, col[0] - 1, wall + 2, pinion_axis[0], pinion_axis[1], 1, 0);       // column prints front face down: tips toward +y
-    tear_xd(bore_px, col[1] - wall - 1, wall + 2, pinion_axis[0], pinion_axis[1], 1, 0);
+    tear_xd(shaft_bore, col[0] - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);   // teardrop tips toward +y (print up)
+    tear_xd(bore_px, col[1] - boss_len - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);
     for (zc = [cjoint[1] / 2, col_top - cjoint[1] / 2]) joint_bolts(zc, [1, 0]);
   }
-  // top-stop ledge under the slider's -x tab, down to the front wall (prints from the -x wall = the bed)
-  translate([col[0] + wall - 0.01, col[2] + wall - 0.01, slider_z0_up + tab_dz - 6]) cube([ledge_x1 - (col[0] + wall) + 0.01, ledge[3] - col[2] - wall + 0.01, 6]);
 }
 
 module rear_cover() {   // closes the U into a box; carries the slider's rear guides (ribs, print flat inner face up)

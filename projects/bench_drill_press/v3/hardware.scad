@@ -14,3 +14,10 @@ module hw_chuck_bit() { cz = tool_face_z() - shaft_gap;
   translate([0, 0, cz - chuck_len - bit_stickout]) cylinder(d = 1, h = bit_stickout + 0.01, $fn = 12); }
 module hw_iron_handle() { translate([0, 0, tool_face_z() - iron_air_gap]) cylinder(d = iron_d, h = 120, $fn = 64); }   // handle starts just above the hot zone
 module hw_iron_hot() { translate([0, 0, tool_face_z() - tool_D]) cylinder(d = iron_barrel_d, h = iron_hot_len, $fn = 32); }
+module hw_axle() {   // fixed M6 x 100: head on the handle's outer face, nut + jam nut outside the -x boss
+  translate([0, pinion_axis[0], pinion_axis[1]]) {
+    xcyl(axle_d, hub_x[1] - axle_len, hub_x[1]);
+    translate([hub_x[1], 0, 0]) rotate([0, 90, 0]) cylinder(d = 11.05, h = 4, $fn = 6);
+    for (k = [0, 1]) translate([col[0] - 5 * (k + 1), 0, 0]) rotate([0, 90, 0]) cylinder(d = 11.05, h = 5, $fn = 6);
+  }
+}
