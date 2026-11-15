@@ -83,7 +83,15 @@ module column() {   // U-channel, printed front face down (+y up)
     tear_xd(shaft_bore, col[0] - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);   // teardrop tips toward +y (print up)
     tear_xd(bore_px, col[1] - boss_len - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);
     for (zc = [cjoint[1] / 2, col_top - cjoint[1] / 2]) joint_bolts(zc, [1, 0]);
+    scale_ticks();
   }
+}
+
+// plunge scale on the column's -x face: 1 mm ticks, 5 / 10 mm longer, 0.6 deep. Depth d is read at the pointer's top edge.
+// The face is vertical when the column prints front-face down, and the grooves run along the print's Z: no overhang.
+module scale_ticks() {
+  for (d = [scale_range[0]:scale_range[1]]) let(L = d % 10 == 0 ? 5 : d % 5 == 0 ? 3.5 : 2)
+    translate([col[0] - 0.01, scale_y, head_z0_up + ptr_dz - d - 0.3]) cube([0.61, L, 0.6]);
 }
 
 module rear_cover() {   // closes the U into a box; carries the slider's rear guides (ribs, print flat inner face up)

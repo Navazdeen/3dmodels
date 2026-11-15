@@ -24,6 +24,9 @@ module head_body() {
     let(xo = ring_slit/2 + 8 + 3) translate([s > 0 ? xo - 3 : -xo, -sqrt(pow(ring_d/2 + ring_wall - 0.5, 2) - xo*xo) - 1, z0]) cube([3, 1, ring_h]);
   }
   translate([-pin_w/2, 0, 0]) rotate([90, 0, 90]) linear_extrude(pin_w) mirror([1, -1]) rack2d_z(z0 + rack_z0, rack_teeth);   // 2D (z,y) -> world (y,z)
+  // depth pointer: fin off the back face at the -x corner, index = its top edge; 45° underside (prints upright, no support)
+  let(zp = z0 + ptr_dz, y0 = rack_root_y - 0.01) translate([ptr_x[0], 0, 0]) rotate([90, 0, 90]) linear_extrude(ptr_x[1] - ptr_x[0])
+    polygon([[y0, zp - 1.5 - (ptr_y1 - y0)], [ptr_y1, zp - 1.5], [ptr_y1, zp], [y0, zp]]);
 }
 
 module head() {

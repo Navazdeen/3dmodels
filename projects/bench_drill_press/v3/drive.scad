@@ -65,3 +65,21 @@ module handle_hub() {   // hub + spokes + round drive sleeve through the +x boss
   }
 }
 
+
+// depth-stop collar on the left rod (prints flat, as used). Slit to the front between two ears, M5 across them;
+// the thin back is the hinge. Top face is the stop the head bottom lands on; a 1 mm relief keeps the front gib's
+// free end (which reaches the head bottom) off the collar, so the stop load goes into rigid plastic only.
+module depth_collar() {
+  x = rod_x[0]; zt = collar_z(travel_len); z0 = zt - collar_h; by = rod_y - collar_bolt_dy; zc = z0 + collar_h/2;
+  difference() {
+    union() {
+      translate([x, rod_y, z0]) cylinder(d = collar_d, h = collar_h, $fn = 64);
+      translate([x - collar_ear[0]/2, rod_y - collar_ear[1], z0]) cube([collar_ear[0], collar_ear[1], collar_h]);
+    }
+    translate([x, rod_y, z0 - 1]) cylinder(d = collar_bore, h = collar_h + 2, $fn = 48);
+    translate([x, rod_y, 0]) ef_cone(collar_bore, z0);                                    // elephant-foot lead-in
+    translate([x - collar_slit/2, rod_y - collar_ear[1] - 1, z0 - 1]) cube([collar_slit, collar_ear[1] + 1, collar_h + 2]);
+    tear_x(m5_clear, x - collar_ear[0]/2 - 1, collar_ear[0] + 2, by, zc);                 // M5 x 25 + nut across the slit
+    translate([x - gib_b/2 - 1, rod_y - slot_hw[1] - 0.5, zt - 1]) cube([gib_b + 2, slot_hw[1] - rod_d/2, 2]);   // gib-tip relief
+  }
+}

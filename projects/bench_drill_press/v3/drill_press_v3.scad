@@ -18,6 +18,7 @@ parts = concat([
   ["spring_slider","Spring slider","PLA",[0,40,0],"print=auto"],
   ["handle_hub","Handle (3 spokes)","PLA",[40,0,0],"print=y90"],
   ["hw_spring","Bike kickstand spring (UNVERIFIED)","",[0,40,0],"flex=spring_slider,base"],
+  ["depth_collar","Depth-stop collar","PLA",[-40,0,-30],"print=auto"],
   ["hw_rod","Rod Ø8","cut from one 500 mm rod",[0,0,0],"pieces=2","flex=head"]
 ], tool == "775" ? [["hw_motor","775 motor (UNVERIFIED size)","",[0,-60,0],"flex=head"], ["hw_chuck_bit","Chuck + bit"]]
  : tool == "555" ? [["sleeve_555","555 sleeve","PLA",[0,-60,0],"print=x180","flex=head"], ["hw_motor","555 motor (UNVERIFIED size)","",[0,-60,0],"flex=sleeve_555"], ["hw_chuck_bit","Chuck + bit"]]
@@ -27,7 +28,7 @@ checks = concat([ ["hw_rod","base","<=",0.05], ["hw_rod","top_arm","<=",0.05], [
   ["gear_cluster","head","<=",0.3], ["gear_cluster","spring_slider","<=",0.3], ["handle_hub","gear_cluster","<=",0.3], ["gear_cluster","column",">=",0], ["gear_cluster","column","<=",0.5], ["hw_axle","column","<=",0.3],
   ["spring_slider","frame","<=",0.5], ["handle_hub","head",">=",1], ["handle_hub","hw_rod",">=",2], ["handle_hub","column","<=",0.3]], tool == "iron" ? [["sleeve_iron","hw_iron_hot",">=",iron_air_gap], ["frame","hw_iron_hot",">=",1], ["head","hw_iron_hot",">=",iron_air_gap], ["sleeve_iron","head","<=",0.3]]
   : tool == "555" ? [["sleeve_555","head","<=",0.3], ["hw_chuck_bit","frame",">=",0]] : [["hw_motor","head","<=",0.6], ["hw_chuck_bit","frame",">=",0]],
-  []);   // depth-stop check returns in Task 3 (rod collar)
+  pose == "down" ? [["depth_collar","head","touch"]] : [["depth_collar","head",">=",1]], [["depth_collar","hw_rod","<=",0.3]]);
 report = [ ["frame h", frame_h(), "column len", col_len], ["rod cut length", rod_len], ["pinion axis", pinion_axis], ["gib k / gap / stress", [gib_k, gib_gap, gib_stress()]], ["tip moment 5 N / 50 N", [tip_moment(5), tip_moment(50)]], ["spring N top/bottom", [ks_force(0), ks_force(travel_len)]], ["return torque / need", [ret_torque(0), (head_mass*9.81 + friction) * pin_r]], ["tool / s / tip", [tool, tool_s, tip_z(plunge, tool_s)]] ];
 module pick(n){ if(part=="all"||part==n) children(); }
 pick("base") base();
@@ -40,6 +41,7 @@ pick("hw_axle") hw_axle();
 pick("spring_slider") spring_slider();
 pick("handle_hub") handle_hub();
 pick("hw_spring") hw_spring();
+pick("depth_collar") depth_collar();
 pick("hw_rod") hw_rods();
 pick("sleeve_555") sleeve_555();
 pick("sleeve_iron") sleeve_iron();

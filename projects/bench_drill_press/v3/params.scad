@@ -228,3 +228,30 @@ assert(tube_shear(T_stop, sleeve_od, sleeve_id) <= 8, "handle sleeve torsion");
 assert(axle_len >= 100, "axle length");
 assert(tube_shear(ks_force(travel_len) * spr_r, spr_root_d, sleeve_id) <= 8, "cluster core between the pinions (spring torque)");
 assert(pin_m * (pin_t - 2.5) / 2 - sleeve_od / 2 >= 2, "dog slots clear the main pinion root by 2 mm");
+
+// ===== v3.1 depth collar + scale (plan_v3_1 Task 3) =====
+// Split C-collar on the left rod: slit to the front, M5 across the front ears, thin back acts as the hinge.
+collar_h = 12; collar_d = 18;           // body Ø (5 mm wall round the rod)
+collar_bore = rod_d + 0.3;              // slides on when loose; the M5 closes the slit
+collar_slit = 2; collar_ear = [16, 18]; // ears: x width, reach in front of the rod axis (-y)
+collar_bolt_dy = 15;                    // M5 axis in front of the rod axis
+m5_head_d = 8.5;                        // ISO 4762 socket head
+pla_creep = 12;                         // MPa sustained (3d-print-designer material-pla)
+clamp_n = pla_creep * PI/4 * (m5_head_d*m5_head_d - m5_clear*m5_clear);   // N preload PLA keeps under the head (~395)
+collar_lever = (collar_bolt_dy + collar_d/2) / (collar_d/2);   // hinge at the back: screw arm / rod-centre arm
+collar_hold = mu * clamp_n * 2 * collar_lever;                // N, friction on both jaws
+collar_bore_p = clamp_n * collar_lever / (rod_d * collar_h);   // MPa, projected jaw pressure on the rod
+rack_force = 30 * spoke_r / pin_r;      // N at the rack, 30 N on a 60 mm spoke
+function collar_z(depth) = head_z0_up - depth;   // collar top: the head bottom lands here at that plunge
+// pointer fin on the head's -x back corner, reading a scale on the column's -x face
+ptr_dz = 68;                            // index edge above the head bottom: whole range clears the axle nuts (z <= 139)
+ptr_x = [col[0] - 5, col[0] - 1];       // 1 mm off the scale face
+ptr_y1 = col[2] + 4;                    // tip
+scale_y = col[2] + 0.6;                 // ticks start just behind the column front edge
+scale_range = [0, travel_len];
+assert(collar_hold >= 3 * rack_force, str("depth collar holds ", collar_hold, " N < 3 x ", rack_force));
+assert(collar_bore_p <= pla_creep, str("collar jaw pressure ", collar_bore_p, " MPa"));
+assert(scale_range[0] <= 0 && scale_range[1] >= travel_len, "scale covers the full plunge");
+assert(head_z0_up - travel_len + ptr_dz - 1.5 - (ptr_y1 - (pinion_axis[0] - 11.05/2)) >= pinion_axis[1] + 11.05/2 + 1, "pointer fin clears the axle nuts at full plunge");
+assert(ptr_dz <= head_h, "pointer on the head");
+assert(collar_z(travel_len) - collar_h > base_t, "collar above the base");
