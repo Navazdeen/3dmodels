@@ -128,7 +128,14 @@ function ks_force(p) = ks_T0 + ks_k * ks_ext(p);
 function ret_torque(p) = ks_force(p) * spr_r;                     // N·mm lifting the head (+)
 function gear_stress(F, m, b) = F / (b * m * 0.3);                // Lewis, Y ≈ 0.3
 rack_len = rack_teeth * PI * pin_m;
-n_printed = 9; n_screws = 9;                                      // + M5 ring, 2 rod grubs, 4 gib adjusters, 2 stop-ring clamps
+// v3.1 BOM: [item, qty, screws per item]. README's hardware table is this list.
+printed_parts = ["base", "column", "rear_cover", "top_arm", "head", "gear_cluster", "spring_slider", "handle_hub", "depth_collar", "sleeve_555", "sleeve_iron"];
+hw_bom = [["M5 x 16 socket + M5 nut (frame joints: 4 base, 2 arm)", 6, 1], ["M5 x 25 socket + M5 nut (depth collar)", 1, 1],
+          ["M5 x 20 socket + M5 heat-set insert (43 mm ring clamp)", 1, 1], ["M3 x 6 grub + M3 heat-set insert (rod retention)", 2, 1],
+          ["M3 x 16 thread-forming (bottom gib adjusters)", 2, 1], ["M3 x 10 thread-forming (top gib adjusters)", 2, 1],
+          ["M6 x 100 part-threaded bolt + 2 M6 nuts (fixed axle)", 1, 1]];
+n_printed = len(printed_parts);
+n_screws = [for (h = hw_bom) 1] * [for (h = hw_bom) h[1] * h[2]];
 assert(ret_torque(0) >= 1.25 * (head_mass * 9.81 + friction) * pin_r - 0.01, str("return torque ", ret_torque(0)));
 assert(ret_torque(0) > 0 && ret_torque(travel_len) > 0, "spring must lift the head at both ends");
 assert(ks_ext(travel_len) <= ks_max_ext * ks_L0, str("kickstand over-stretched: ", ks_ext(travel_len)));
@@ -136,7 +143,8 @@ assert(ks_anchor_z > wall, "spring anchor above the column floor");
 assert(rack_len >= travel_len + 4 + pin_r, str("rack too short: ", rack_len));
 assert(gear_stress(ks_force(travel_len), spr_m, spr_b) <= 25, str("spring pinion tooth stress ", gear_stress(ks_force(travel_len), spr_m, spr_b)));
 assert(gear_stress(ks_force(travel_len) * spr_r / pin_r + 50, pin_m, pin_w) <= 25, "main pinion tooth stress");
-assert(n_printed <= 10 && n_screws <= 9, "part / screw budget (stop ring has 2 clamp screws)");
+assert(n_printed <= 11 && n_screws <= 20, str("part / screw budget: ", n_printed, " printed, ", n_screws, " screws"));
+assert(n_screws == 15, str("BOM screw count changed: ", n_screws, " (update README)"));
 spring_y = (pinion_axis[0] + spr_r + 1.25 * spr_m + slider_back) / 2;   // spring axis y: under the slider's hook hole
 ledge = [slider_x - slider_w/2 - 3, slider_x - slider_w/2, pinion_axis[0] + spr_r + 1.25 * spr_m, pinion_axis[0] + spr_r + 1.25 * spr_m + 5];   // tab x0,x1,y0,y1 (outboard -x side, 3 x 5)
 // tooth phases: BOSL2 puts a tooth on local +y (= world +y after the rotate onto x); turn so a tooth sits in the rack gap at the mesh
@@ -205,9 +213,12 @@ col_top = arm_top - arm_t;              // column top = arm underside
 key_d = 3; key_c = 0.2;                 // column ends sit key_d deep in pockets (clearance key_c) in the base and arm
 col_len = col_top + 2 * key_d;          // printed length of the column (lying on its side)
 cjoint = [6, 15];                       // base collar / arm skirt round the column ends: wall, height
-bolt_y = [col[2] + 8, col[2] + 8 + 15];  // side-bolt y positions (rear one clears the spring anchor post)
+bolt_y = [col[2] + 8, col[3] - 5.5];     // side-bolt y positions: rear one behind the spring anchor post (its shank used to run through it)
 cover_t = 3;                            // rear cover thickness (closes the U-channel)
-m5_nut = [8.1, 4.2];                    // M5 nut across flats, thickness
+m5_nut = [8.0, 4.7];                    // M5 nut across flats, thickness (ISO 4032)
+m5_head = [8.5, 5];                     // M5 socket head Ø, height (ISO 4762)
+joint_l = 16;                           // M5 joint screw length (hardware.py pick M5 --grip 9.2 --nut)
+nut_pocket = [m5_nut[0] + 0.2, m5_nut[1] + 0.1];   // captive pocket inside the column top: AF, depth
 col_print_h = col[1] - col[0];          // column lying on its -x side: print height = its width
 assert(col_len <= bed[0] - 1, str("column ", col_len, " mm long: must fit the bed lying down"));
 assert(base_t <= 120 && col_print_h <= 120 && arm_t <= 120 && cover_t <= 120, "print heights");
@@ -233,12 +244,12 @@ assert(pin_m * (pin_t - 2.5) / 2 - sleeve_od / 2 >= 2, "dog slots clear the main
 // Split C-collar on the left rod: slit to the front, M5 across the front ears, thin back acts as the hinge.
 collar_h = 12; collar_d = 18;           // body Ø (5 mm wall round the rod)
 collar_bore = rod_d + 0.3;              // slides on when loose; the M5 closes the slit
-collar_slit = 2; collar_ear = [16, 18]; // ears: x width, reach in front of the rod axis (-y)
-collar_bolt_dy = 15;                    // M5 axis in front of the rod axis
-m5_head_d = 8.5;                        // ISO 4762 socket head
+collar_slit = 2; collar_bolt_dy = 15;   // M5 axis in front of the rod axis
+collar_ear = [16, collar_bolt_dy + m5_head[0]/2 + 1.5];   // ears: x width, reach in front of the rod axis (-y); 1.5 mm skin past the head
 pla_creep = 12;                         // MPa sustained (3d-print-designer material-pla)
-clamp_n = pla_creep * PI/4 * (m5_head_d*m5_head_d - m5_clear*m5_clear);   // N preload PLA keeps under the head (~395)
-collar_lever = (collar_bolt_dy + collar_d/2) / (collar_d/2);   // hinge at the back: screw arm / rod-centre arm
+clamp_n = pla_creep * PI/4 * (m5_head[0]*m5_head[0] - m5_clear*m5_clear);   // N preload PLA keeps under the head (~395)
+collar_lever = (collar_bolt_dy + collar_d/2) / (collar_d/2);
+assert(collar_ear[1] - collar_bolt_dy - m5_clear/2 >= 1.2, "collar ear skin in front of the M5");   // hinge at the back: screw arm / rod-centre arm
 collar_hold = mu * clamp_n * 2 * collar_lever;                // N, friction on both jaws
 collar_bore_p = clamp_n * collar_lever / (rod_d * collar_h);   // MPa, projected jaw pressure on the rod
 rack_force = 30 * spoke_r / pin_r;      // N at the rack, 30 N on a 60 mm spoke
@@ -247,7 +258,7 @@ function collar_z(depth) = head_z0_up - depth;   // collar top: the head bottom 
 ptr_dz = 68;                            // index edge above the head bottom: whole range clears the axle nuts (z <= 139)
 ptr_x = [col[0] - 5, col[0] - 1];       // 1 mm off the scale face
 ptr_y1 = col[2] + 4;                    // tip
-scale_y = col[2] + 0.6;                 // ticks start just behind the column front edge
+scale_y = col[2] + 1.5;                 // ticks start 1.5 behind the column front edge (wall rule)
 scale_range = [0, travel_len];
 assert(collar_hold >= 3 * rack_force, str("depth collar holds ", collar_hold, " N < 3 x ", rack_force));
 assert(collar_bore_p <= pla_creep, str("collar jaw pressure ", collar_bore_p, " MPa"));
@@ -255,3 +266,16 @@ assert(scale_range[0] <= 0 && scale_range[1] >= travel_len, "scale covers the fu
 assert(head_z0_up - travel_len + ptr_dz - 1.5 - (ptr_y1 - (pinion_axis[0] - 11.05/2)) >= pinion_axis[1] + 11.05/2 + 1, "pointer fin clears the axle nuts at full plunge");
 assert(ptr_dz <= head_h, "pointer on the head");
 assert(collar_z(travel_len) - collar_h > base_t, "collar above the base");
+
+// column bending at the foot from the drilling reaction (spec: reported). Conservative: open U only, cover ignored.
+function col_bend_stress(F) = let(b = col[1] - col[0], h = col[3] - col[2], t = wall,
+    Af = b * t, Aw = 2 * t * (h - t), yf = t/2, yw = t + (h - t)/2, yc = (Af * yf + Aw * yw) / (Af + Aw),
+    I = b * t*t*t / 12 + Af * pow(yc - yf, 2) + 2 * t * pow(h - t, 3) / 12 + Aw * pow(yw - yc, 2))
+  F * (col[2] + yc) * max(yc, h - yc) / I;   // moment arm: tool axis (y 0) to the section centroid
+assert(col_bend_stress(50) <= 10, str("column bending ", col_bend_stress(50), " MPa at 50 N"));
+
+// assembly path: the rear cover drops in from above, so its slider-guide ribs (plan y >= slider_back + 0.3)
+// must miss every inward feature above them in plan: the arm-joint nut blocks.
+top_bolt_y = [bolt_y[0]];              // arm joint: front bolt only per side (a rear pocket would block the cover's ribs)
+nut_block_y1 = top_bolt_y[0] + nut_pocket[0]/2 + 1.6;   // rear end of the captive-nut blocks inside the column top
+assert(nut_block_y1 <= slider_back + 0.3 - 0.5, str("cover ribs hit the nut blocks while sliding in: block to y ", nut_block_y1, ", ribs from ", slider_back + 0.3));

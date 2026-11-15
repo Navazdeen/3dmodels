@@ -31,10 +31,17 @@ module column_block(z0, z1) { translate([col[0], col[2], z0]) cube([col[1] - col
 module col_outline(c = 0) { translate([col[0] - c, col[2] - c]) square([col[1] - col[0] + 2*c, col[3] + cover_t - col[2] + 2*c]); }
 // M5 clamp holes through a collar/skirt and the column's side walls (along x) and through the rear wall + cover (along y)
 // up = the part's print-up direction as world (y, z): base [0,1], column [1,0], arm [0,-1]
-module joint_bolts(zc, up = [0, 1]) {
-  for (y = bolt_y) tear_xd(5.5, col[0] - cjoint[0] - 1, col[1] - col[0] + 2 * cjoint[0] + 2, y, zc, up[0], up[1]);
-  if (up[1] != 0) tear_y(5.5, 0, col[3] - wall, cover_t + cjoint[0] + wall + 2, zc, up[1] < 0);
-  else translate([0, col[3] - wall, zc]) rotate([-90, 0, 0]) cylinder(d = 5.5, h = cover_t + cjoint[0] + wall + 2, $fn = 24);
+module joint_bolts(zc, up = [0, 1], ys = bolt_y) {   // M5s per side wall, along x through the collar/skirt and the column wall
+  for (y = ys) tear_xd(5.5, col[0] - cjoint[0] - 1, col[1] - col[0] + 2 * cjoint[0] + 2, y, zc, up[0], up[1]);
+}
+
+// captive nut pockets inside the column top (the arm joint is closed in by the cover before its screws go in).
+// One block per wall rising from the front wall (no ledge face-down); flats face +-y so each pocket roof is a 4.7 mm bridge.
+module nut_block(zc, cut = false) {
+  hz = nut_pocket[0] / cos(30) / 2 + 1.6;
+  for (s = [-1, 1]) let(xw = s * (col[1] - wall), xi = xw - s * nut_pocket[1])
+    if (!cut) translate([min(xw, xi) - (s > 0 ? 0 : 0.01), col[2] + wall - 0.01, zc - hz]) cube([nut_pocket[1] + 0.01, nut_block_y1 - col[2] - wall, 2 * hz]);
+    else for (y = top_bolt_y) translate([min(xw, xi) - 0.01, y, zc]) rotate([0, 90, 0]) cylinder(d = nut_pocket[0] / cos(30), h = nut_pocket[1] + 0.02, $fn = 6);
 }
 
 module base() {
@@ -76,13 +83,16 @@ module column() {   // U-channel, printed front face down (+y up)
         translate([col[0] - 1, col[2], -1000]) cube([col[1] - col[0] + 2, 1000, 2000]);    // behind the front face (the bed)
       }
       // top-stop ledge under the slider's -x tab, down to the front wall
+      nut_block(col_top - cjoint[1] / 2);
       translate([col[0] + wall - 0.01, col[2] + wall - 0.01, slider_z0_up + tab_dz - 6]) cube([ledge_x1 - (col[0] + wall) + 0.01, ledge[3] - col[2] - wall + 0.01, 6]);
     }
     for (win = [[pin_w + 4, 11], [col[1] - col[0] - 2 * boss_len, 7]]) let(w = win[0], hh = win[1])   // pinion window + gear slot (stops at the bosses)
       translate([-w/2, col[2] - 1, pinion_axis[1] - hh]) cube([w, wall + 2, 2 * hh]);
     tear_xd(shaft_bore, col[0] - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);   // teardrop tips toward +y (print up)
     tear_xd(bore_px, col[1] - boss_len - 1, boss_len + 2, pinion_axis[0], pinion_axis[1], 1, 0);
-    for (zc = [cjoint[1] / 2, col_top - cjoint[1] / 2]) joint_bolts(zc, [1, 0]);
+    joint_bolts(cjoint[1] / 2, [1, 0]);
+    joint_bolts(col_top - cjoint[1] / 2, [1, 0], top_bolt_y);
+    nut_block(col_top - cjoint[1] / 2, cut = true);
     scale_ticks();
   }
 }
@@ -103,7 +113,6 @@ module rear_cover() {   // closes the U into a box; carries the slider's rear gu
         for (g = [[slider_x + slider_w/2 + 0.3, col[1] - wall - 0.3], [col[0] + wall + 0.3, slider_x - slider_w/2 - 0.3]])
           translate([g[0], gy, gz0]) cube([g[1] - g[0], col[3] - gy + 0.01, gz1 - gz0]);
     }
-    for (zc = [cjoint[1] / 2, col_top - cjoint[1] / 2]) joint_bolts(zc, [0, 0]);
   }
 }
 
@@ -114,7 +123,7 @@ module top_arm() {   // plate holding the rod tops + a skirt round the column to
       translate([0, 0, col_top - cjoint[1]]) linear_extrude(cjoint[1] + 0.01) col_outline(key_c + cjoint[0]);   // skirt block
     }
     translate([0, 0, col_top - cjoint[1] - 1]) linear_extrude(cjoint[1] + 1 + key_d) col_outline(key_c);   // column-top pocket, one cut
-    joint_bolts(col_top - cjoint[1] / 2, [0, -1]);
+    joint_bolts(col_top - cjoint[1] / 2, [0, -1], top_bolt_y);
     for (x = rod_x) {
       translate([x, rod_y, col_top - 1]) cylinder(d = rod_bore, h = arm_t + 2, $fn = 64);
       tear_xd(m3_insert[0], x > 0 ? x + rod_d/2 - 0.5 : -arm_xh - 1, (x > 0 ? arm_xh + 1 : -(x - rod_d/2 + 0.5) - arm_xh), rod_y, arm_top - arm_t/2, 0, -1);   // M3 grub (arm prints upside down)

@@ -21,3 +21,13 @@ module hw_axle() {   // fixed M6 x 100: head on the handle's outer face, nut + j
     for (k = [0, 1]) translate([col[0] - 5 * (k + 1), 0, 0]) rotate([0, 90, 0]) cylinder(d = 11.05, h = 5, $fn = 6);
   }
 }
+
+// M5 socket + nut, along x: head seated on the face at xo, outward = s; nut seated on the face at xn
+module m5_xbolt(xo, s, xn, y, z, l) {
+  translate([0, y, z]) {
+    translate([xo, 0, 0]) rotate([0, s * 90, 0]) cylinder(d = m5_head[0], h = m5_head[1], $fn = 32);
+    translate([min(xo, xo - s * l), 0, 0]) rotate([0, 90, 0]) cylinder(d = 5, h = l, $fn = 24);
+    translate([min(xn, xn - s * m5_nut[1]), 0, 0]) rotate([0, 90, 0]) cylinder(d = m5_nut[0] / cos(30), h = m5_nut[1], $fn = 6);
+  } }
+module hw_joint_bolts(zc, ys = bolt_y) { for (s = [-1, 1], y = ys) m5_xbolt(s * (col[1] + key_c + cjoint[0]), s, s * (col[1] - wall), y, zc, joint_l); }
+module hw_collar_bolt() { x = rod_x[0]; m5_xbolt(x + collar_ear[0]/2, 1, x - collar_ear[0]/2, rod_y - collar_bolt_dy, collar_z(travel_len) - collar_h/2, 25); }

@@ -80,6 +80,6 @@ module depth_collar() {
     translate([x, rod_y, 0]) ef_cone(collar_bore, z0);                                    // elephant-foot lead-in
     translate([x - collar_slit/2, rod_y - collar_ear[1] - 1, z0 - 1]) cube([collar_slit, collar_ear[1] + 1, collar_h + 2]);
     tear_x(m5_clear, x - collar_ear[0]/2 - 1, collar_ear[0] + 2, by, zc);                 // M5 x 25 + nut across the slit
-    translate([x - gib_b/2 - 1, rod_y - slot_hw[1] - 0.5, zt - 1]) cube([gib_b + 2, slot_hw[1] - rod_d/2, 2]);   // gib-tip relief
+    translate([x - gib_b/2 - 1, rod_y - slot_hw[1] - 0.5, zt - 1]) cube([gib_b + 2, slot_hw[1] + 0.5, 2]);   // gib-tip relief, open into the bore (no sliver)
   }
 }

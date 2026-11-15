@@ -1,6 +1,6 @@
 # Bench drill press
 
-**Current version: [v3/](v3/README.md)**. It has 9 printed parts: a preloaded V-slide, centre rack and pinion, a one-piece frame and a 43 mm collar. Design: [design_v3.md](design_v3.md).
+**Current version: [v3/](v3/README.md) (v3.1)**. It has 11 printed parts: a preloaded V-slide, centre rack and pinion on a fixed M6 axle, a 4-part frame (base, column, rear cover, top arm) printed in load-best orientations, a 43 mm collar and a rod-collar depth stop with a scale. Design: [design_v3.md](design_v3.md) + [design_v3_1.md](design_v3_1.md).
 
 The rest of this folder (top-level `.scad` files, `stl/`, `design.md`, `plan.md`) is **v2**, kept as the record of how the design got here.
 
